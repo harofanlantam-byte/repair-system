@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ข้อมูลครุภัณฑ์ - ระบบแจ้งซ่อม</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .detail-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .detail-card-header { padding: 24px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .detail-card-header h2 { font-size: 20px; font-weight: 700; margin: 0; }
+  .detail-card-body { padding: 28px; }
+  .detail-row { display: flex; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { width: 180px; flex-shrink: 0; font-size: 13px; color: var(--text-muted); font-weight: 500; }
+  .detail-value { flex: 1; font-size: 15px; font-weight: 500; color: var(--text); }
+  .detail-value.code { font-family: 'Space Mono', monospace; color: var(--accent); font-size: 16px; }
+  @media (max-width: 640px) { .detail-row { flex-direction: column; gap: 4px; } .detail-label { width: 100%; } }
+  .btn-back { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); text-decoration: none; font-size: 13px; }
+  .btn-back:hover { border-color: var(--accent); }
+  #loading-detail { text-align: center; padding: 60px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<button class="menu-toggle" onclick="toggleSidebar()"><span>☰</span> เมนู</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><span class="icon">🔧</span><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-btn admin-only">📊 แดชบอร์ด</a>
+    <a href="manager-dashboard.html" class="nav-btn manager-only no-user">👔 แดชบอร์ดผู้จัดการ</a>
+    <a href="type-select.html" class="nav-btn">📂 ประเภท</a>
+    <a href="repair-form.html" class="nav-btn">📝 คำแจ้งซ่อม</a>
+    <a href="history.html" class="nav-btn">📋 ประวัติทั้งหมด</a>
+    <div class="sidebar-divider">👤 บัญชีของฉัน</div>
+    <a href="my-history.html" class="nav-btn">📋 ประวัติของฉัน</a>
+    <a href="profile.html" class="nav-btn">👤 โปรไฟล์</a>
+    <a href="account-settings.html" class="nav-btn">🔐 จัดการบัญชี</a>
+    <div class="sidebar-divider admin-only">⚙️ ผู้ดูแลระบบ</div>
+    <a href="user-management.html" class="nav-btn admin-only">👥 จัดการผู้ใช้</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar">👤</div>
+      <div>
+        <div class="sidebar-user-name" id="sidebar-user-name">ผู้ใช้</div>
+        <div class="sidebar-user-role" id="sidebar-user-role">👤 ผู้ใช้งาน</div>
+      </div>
+    </div>
+    <button class="nav-btn" onclick="doLogout()" style="margin-top:8px;">🚪 ออกจากระบบ</button>
+  </div>
+</aside>
+
+<header class="topbar">
+  <div class="topbar-brand"><div class="icon">🔧</div><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="topbar-nav" id="topbar-nav">
+    <a href="my-history.html" class="nav-btn">� ประวัติของฉัน</a>
+    <a href="repair-form.html" class="nav-btn">📝 แจ้งซ่อม</a>
+    <a href="type-select.html" class="nav-btn">� ประเภท</a>
+  </nav>
+  <div class="topbar-right">
+    <button id="theme-toggle" class="btn btn-icon" title="สลับธีม">🌙</button>
+    <button class="btn btn-icon" onclick="openNotifications()" title="แจ้งเตือน" style="position:relative">🔔 <span id="notif-badge" class="notif-badge" style="display:none"></span></button>
+    <span id="topbar-role"></span>
+    <span id="topbar-uname"></span>
+  </div>
+</header>
+
+<main class="main-content">
+  <div class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <a class="btn-back" id="backBtn" href="type-select.html">◀ กลับ</a>
+        <h1 class="section-title" id="detail-title" style="margin:0;">🔍 ข้อมูลครุภัณฑ์</h1>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-accent" id="btn-edit-toggle" onclick="toggleEdit()">✏️ แก้ไขข้อมูล</button>
+        <button class="btn btn-danger" id="btn-delete" onclick="deleteCurrentEquip()">🗑️ ลบ</button>
+      </div>
+    </div>
+
+    <div id="loading-detail">⏳ กำลังโหลด...</div>
+    <div id="view-section" class="detail-card" style="display:none">
+      <div class="detail-card-header">
+        <h2 id="view-name">-</h2>
+        <span class="selected-type-badge" id="view-status-badge">✅ ใช้งาน</span>
+      </div>
+      <div class="detail-card-body" id="view-detail"></div>
+    </div>
+
+    <!-- edit section ซ่อนด้วย inline style display:none -->
+    <div id="edit-section" style="display:none">
+      <h3>✏️ แก้ไขข้อมูลครุภัณฑ์</h3>
+      <div class="form-light">
+        <div id="edit-alert"></div>
+        <input type="hidden" id="edit-id">
+        <div class="form-group"><label>รหัส <span style="color:red">*</span></label><input type="text" id="edit-code"></div>
+        <div class="form-group"><label>ชื่อ <span style="color:red">*</span></label><input type="text" id="edit-name"></div>
+        <div class="form-group"><label>ประเภท</label><input type="text" id="edit-type-display" readonly disabled><input type="hidden" id="edit-type"></div>
+        <div class="form-row-3">
+          <div class="form-group"><label>ตึก</label><input type="text" id="edit-building"></div>
+          <div class="form-group"><label>แผนก</label><input type="text" id="edit-dept"></div>
+          <div class="form-group"><label>ห้อง</label><input type="text" id="edit-room"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px;">
+          <button class="btn btn-accent" onclick="saveEdit()">💾 บันทึก</button>
+          <button class="btn btn-outline" onclick="toggleEdit()">ยกเลิก</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ===== CONFIG =====
+const API = '';
+let token = localStorage.getItem('repair_token') || '';
+let user = JSON.parse(localStorage.getItem('repair_user') || 'null');
+if (!token || !user) { window.location.href = 'index.html'; }
+
+// ===== INIT UI =====
+(function(){
+  document.getElementById('sidebar-user-name').textContent = user.full_name || user.username;
+  const sr = document.getElementById('sidebar-user-role');
+  sr.textContent = user.role === 'admin' ? '👑 Admin' : user.role === 'manager' ? '👔 Manager' : '👤 ผู้ใช้งาน';
+  document.querySelectorAll('#sidebar .nav-btn').forEach(btn => {
+    if (btn.getAttribute('href') && location.pathname.includes(btn.getAttribute('href'))) btn.classList.add('active');
+  });
+  if (user.role !== 'admin') document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+
+  // topbar
+  const ne = document.getElementById('topbar-uname');
+  if(ne) ne.textContent = user.full_name || user.username;
+  const re = document.getElementById('topbar-role');
+  if(re){
+    if(user.role==='admin'){re.textContent='👑 Admin';re.style.cssText='background:rgba(232,93,38,0.2);color:#e85d26;padding:2px 10px;border-radius:6px;font-size:12px;'}
+    else if(user.role==='manager'){re.textContent='👔 Manager';re.style.cssText='background:rgba(139,92,246,0.2);color:#8b5cf6;padding:2px 10px;border-radius:6px;font-size:12px;'}
+    else{re.textContent='👤 User';re.style.cssText='background:rgba(59,130,246,0.2);color:#3b82f6;padding:2px 10px;border-radius:6px;font-size:12px;'}
+  }
+  // dark mode
+  if(localStorage.getItem('repair_theme')==='dark') document.documentElement.setAttribute('data-theme','dark');
+  const tt=document.getElementById('theme-toggle');
+  if(tt){
+    tt.textContent=localStorage.getItem('repair_theme')==='dark'?'☀️':'🌙';
+    tt.onclick=function(){
+      const d=document.documentElement.getAttribute('data-theme')==='dark';
+      if(d){document.documentElement.removeAttribute('data-theme');localStorage.setItem('repair_theme','light');}
+      else{document.documentElement.setAttribute('data-theme','dark');localStorage.setItem('repair_theme','dark');}
+      tt.textContent=d?'🌙':'☀️';
+    };
+  }
+})();
+
+// ===== HELPERS =====
+let equipData = null;
+
+function toggleSidebar(){
+  document.getElementById('sidebar')?.classList.toggle('open');
+  document.getElementById('sidebar-overlay')?.classList.toggle('active');
+}
+function closeSidebar(){
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('sidebar-overlay')?.classList.remove('active');
+}
+function openNotifications(){}
+function doLogout(){
+  localStorage.removeItem('repair_token');localStorage.removeItem('repair_user');
+  window.location.href='index.html';
+}
+
+// ===== LOAD DATA =====
+(async function(){
+  const id = new URLSearchParams(location.search).get('id');
+  if(!id){document.getElementById('loading-detail').textContent='❌ ไม่พบรหัส';return;}
+  try{
+    const r=await fetch(API+'/api/equipment/'+id,{headers:{'Authorization':'Bearer '+token}});
+    const d=await r.json();
+    if(!d.success||!d.data){document.getElementById('loading-detail').textContent='❌ ไม่พบข้อมูล';return;}
+    equipData=d.data;
+    const eq=d.data;
+    document.getElementById('loading-detail').style.display='none';
+    document.getElementById('view-section').style.display='block';
+    document.getElementById('detail-title').textContent='🔍 '+eq.equipment_name;
+    document.getElementById('view-name').textContent=eq.equipment_name;
+    document.getElementById('view-status-badge').textContent=eq.status==='active'?'✅ ใช้งาน':'❌ เลิกใช้';
+    if(eq.equipment_type_id) document.getElementById('backBtn').href='equipment.html?type_id='+eq.equipment_type_id;
+    document.getElementById('view-detail').innerHTML=
+      '<div class="detail-row"><div class="detail-label">📌 รหัสครุภัณฑ์</div><div class="detail-value code">'+esc(eq.equipment_code)+'</div></div>'+
+      '<div class="detail-row"><div class="detail-label">📦 ชื่อครุภัณฑ์</div><div class="detail-value">'+esc(eq.equipment_name)+'</div></div>'+
+      '<div class="detail-row"><div class="detail-label">📂 ประเภท</div><div class="detail-value">'+esc(eq.type_name||'ไม่ระบุ')+'</div></div>'+
+      '<div class="detail-row"><div class="detail-label">🏢 ตึก/อาคาร</div><div class="detail-value">'+esc(eq.location_building||'-')+'</div></div>'+
+      '<div class="detail-row"><div class="detail-label">👥 ฝ่าย/แผนก</div><div class="detail-value">'+esc(eq.location_department||'-')+'</div></div>'+
+      '<div class="detail-row"><div class="detail-label">🚪 ห้อง</div><div class="detail-value">'+esc(eq.location_room||'-')+'</div></div>'+
+      '<div class="detail-row"><div class="detail-label">📋 สถานะ</div><div class="detail-value"><span class="badge '+(eq.status==='active'?'completed':'cancelled')+'">'+(eq.status==='active'?'✅ ใช้งาน':'❌ เลิกใช้')+'</span></div></div>';
+  }catch(e){
+    document.getElementById('loading-detail').textContent='❌ ผิดพลาด: '+e.message;
+  }
+})();
+
+function esc(s){if(!s)return '';return String(s).replace(/[&<>"']/g,function(m){return {'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[m];});}
+
+// ===== TOGGLE EDIT =====
+function toggleEdit(){
+  var s=document.getElementById('edit-section');
+  // s.style.display ค่าสดคือ 'none' เพราะ inline style ใน HTML ซ่อนไว้
+  if(s.style.display!='none' && s.style.display!=''){
+    s.style.display='none';
+    document.getElementById('btn-edit-toggle').textContent='✏️ แก้ไขข้อมูล';
+  }else{
+    if(!equipData) return;
+    document.getElementById('edit-id').value=equipData.id;
+    document.getElementById('edit-code').value=equipData.equipment_code;
+    document.getElementById('edit-name').value=equipData.equipment_name;
+    document.getElementById('edit-building').value=equipData.location_building||'';
+    document.getElementById('edit-dept').value=equipData.location_department||'';
+    document.getElementById('edit-room').value=equipData.location_room||'';
+    document.getElementById('edit-type').value=equipData.equipment_type_id;
+    document.getElementById('edit-type-display').value=equipData.type_name||'';
+    document.getElementById('edit-alert').innerHTML='';
+    s.style.display='block';
+    document.getElementById('btn-edit-toggle').textContent='✕ ปิดแก้ไข';
+  }
+}
+
+async function saveEdit(){
+  const id=document.getElementById('edit-id').value;
+  const code=document.getElementById('edit-code').value.trim();
+  const name=document.getElementById('edit-name').value.trim();
+  const type=document.getElementById('edit-type').value;
+  if(!code||!name){document.getElementById('edit-alert').innerHTML='<div class="alert alert-error">⚠️ กรอกข้อมูลให้ครบ</div>';return;}
+  try{
+    const r=await fetch(API+'/api/equipment/'+id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({
+      equipment_code:code,equipment_name:name,equipment_type_id:type,
+      location_building:document.getElementById('edit-building').value,
+      location_department:document.getElementById('edit-dept').value,
+      location_room:document.getElementById('edit-room').value
+    })});
+    const d=await r.json();
+    if(d.success){
+      document.getElementById('edit-alert').innerHTML='<div class="alert alert-success">✅ อัพเดตสำเร็จ! กำลังโหลดใหม่...</div>';
+      toggleEdit();
+      setTimeout(()=>location.reload(),800);
+    }else{
+      document.getElementById('edit-alert').innerHTML='<div class="alert alert-error">❌ '+(d.message||'')+'</div>';
+    }
+  }catch(e){
+    document.getElementById('edit-alert').innerHTML='<div class="alert alert-error">❌ ผิดพลาด: '+e.message+'</div>';
+  }
+}
+
+async function deleteCurrentEquip(){
+  if(!equipData||!confirm('❗ ต้องการลบ "'+equipData.equipment_name+'" ออกจากระบบ?')) return;
+  try{
+    const r=await fetch(API+'/api/equipment/'+equipData.id,{method:'DELETE',headers:{'Authorization':'Bearer '+token}});
+    const d=await r.json();
+    if(d.success){alert('🗑️ ลบเรียบร้อย!');window.location.href=document.getElementById('backBtn').href;}
+    else alert('❌ '+(d.message||'ลบไม่สำเร็จ'));
+  }catch(e){alert('❌ ผิดพลาด');}
+}
+</script>
+</body>
+</html>

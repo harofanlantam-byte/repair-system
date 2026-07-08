@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>โปรไฟล์ของฉัน - ระบบแจ้งซ่อมครุภัณฑ์</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Menu Toggle (มือถือ) -->
+<button class="menu-toggle" onclick="toggleSidebar()">
+  <span>☰</span> เมนู
+</button>
+
+<!-- Sidebar Overlay (มือถือ) -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <span class="icon">🔧</span>
+    <span>ระบบแจ้งซ่อม</span>
+  </div>
+  
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-btn" id="nav-dashboard">📊 แดชบอร์ด</a>
+    <a href="equipment.html" class="nav-btn" id="nav-equipment">🗄️ จัดการครุภัณฑ์</a>
+    <a href="type-select.html" class="nav-btn" id="nav-type">📂 ประเภท</a>
+    <a href="repair-form.html" class="nav-btn" id="nav-repair">📝 คำแจ้งซ่อม</a>
+    <a href="history.html" class="nav-btn" id="nav-history">📋 ประวัติทั้งหมด</a>
+    
+    <div class="sidebar-divider">👤 บัญชีของฉัน</div>
+    <a href="my-history.html" class="nav-btn" id="nav-my-history">📋 ประวัติของฉัน</a>
+    <a href="profile.html" class="nav-btn active" id="nav-profile">👤 โปรไฟล์</a>
+    <a href="account-settings.html" class="nav-btn" id="nav-account">🔐 จัดการบัญชี</a>
+    <div class="sidebar-divider admin-only">⚙️ ผู้ดูแลระบบ</div>
+    <a href="user-management.html" class="nav-btn admin-only" id="nav-user-management">👥 จัดการผู้ใช้</a>
+</nav>
+  
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="sidebar-user-avatar">👤</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">ผู้ใช้</div>
+        <div class="user-role" id="sidebar-user-role">👤 ผู้ใช้งาน</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">🚪 ออกจากระบบ</button>
+  </div>
+</aside>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div id="main-app">
+  <nav class="topbar">
+    <div class="topbar-brand"><div class="icon">🔧</div><span>ระบบแจ้งซ่อม</span></div>
+    <div class="topbar-nav">
+      <a href="my-history.html" class="nav-btn">📋 ประวัติของฉัน</a>
+      <a href="repair-form.html" class="nav-btn">📝 แจ้งซ่อม</a>
+      <a href="type-select.html" class="nav-btn">📂 ประเภท</a>
+    </div>
+    <div class="topbar-user">
+      <span class="topbar-user-name" id="topbar-uname"></span>
+      <span class="topbar-user-role" id="topbar-role"></span>
+      <button class="theme-toggle" onclick="toggleDarkMode()" id="theme-toggle">🌙</button>
+      <button class="btn-logout" onclick="doLogout()">ออกจากระบบ</button>
+    </div>
+  </nav>
+  <div class="content">
+    <div class="section-title">👤 โปรไฟล์ของฉัน</div>
+    <div class="section-sub">จัดการข้อมูลส่วนตัวของคุณ</div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px;">
+      <!-- Avatar Section -->
+      <div class="card">
+        <div class="card-header"><h2>📷 รูปโปรไฟล์</h2></div>
+        <div class="card-body" style="text-align: center;">
+          <div style="position:relative;width:150px;height:150px;margin:0 auto 20px;">
+            <div style="width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;" onclick="document.getElementById('avatar-upload').click()">
+              <img id="avatar-img" src="" style="display:none;width:100%;height:100%;object-fit:cover;">
+              <span id="avatar-icon" style="font-size:64px;">👤</span>
+            </div>
+            <div style="position:absolute;bottom:0;right:0;background:var(--accent);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:3px solid var(--card);" onclick="document.getElementById('avatar-upload').click()">
+              <span>📷</span>
+            </div>
+          </div>
+          <input type="file" id="avatar-upload" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;">
+          <button class="btn btn-outline" onclick="document.getElementById('avatar-upload').click()">📷 เปลี่ยนรูปโปรไฟล์</button>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:12px;">คลิกที่รูปเพื่ออัปโหลด<br>รองรับ JPG, PNG, GIF, WEBP (ไม่เกิน 2MB)</p>
+          <div id="avatar-status" style="margin-top:10px;"></div>
+        </div>
+      </div>
+      
+      <!-- Profile Info -->
+      <div class="card">
+        <div class="card-header"><h2>📝 ข้อมูลส่วนตัว</h2></div>
+        <div class="card-body form-light">
+          <div id="profile-alert"></div>
+          <div class="form-group">
+            <label>ชื่อผู้ใช้</label>
+            <input type="text" id="profile-username" readonly style="background:var(--bg);">
+          </div>
+          <div class="form-group">
+            <label>ชื่อ-นามสกุล</label>
+            <input type="text" id="profile-fullname" placeholder="ชื่อ-นามสกุล">
+          </div>
+          <div class="form-group">
+            <label>อีเมล</label>
+            <input type="email" id="profile-email" placeholder="your@email.com">
+          </div>
+          <div class="form-group">
+            <label>เบอร์โทรศัพท์</label>
+            <input type="tel" id="profile-phone" placeholder="081-234-5678">
+          </div>
+          
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+            <button class="btn btn-outline" onclick="resetProfileForm()">🗑️ ล้างข้อมูล</button>
+            <button class="btn btn-accent" onclick="updateProfile()">💾 บันทึกข้อมูล</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="card" style="margin-top:24px;">
+      <div class="card-header"><h2>📊 สถิติการแจ้งซ่อมของฉัน</h2></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+          <div class="stat-card">
+            <div class="stat-icon blue">📋</div>
+            <div class="stat-info">
+              <div class="num" id="my-stat-total">0</div>
+              <div class="label">แจ้งซ่อมทั้งหมด</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon yellow">⏳</div>
+            <div class="stat-info">
+              <div class="num" id="my-stat-pending">0</div>
+              <div class="label">รอดำเนินการ</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green">✅</div>
+            <div class="stat-info">
+              <div class="num" id="my-stat-completed">0</div>
+              <div class="label">ซ่อมสำเร็จ</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange">💰</div>
+            <div class="stat-info">
+              <div class="num" id="my-stat-cost">0</div>
+              <div class="label">รวมค่าใช้จ่าย (บาท)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+(function() {
+  const token = localStorage.getItem('repair_token');
+  const user = JSON.parse(localStorage.getItem('repair_user') || 'null');
+  
+  if (!token || !user) {
+    window.location.href = 'index.html';
+    return;
+  }
+  
+  initSidebar();
+  initDarkMode();
+  loadProfile();
+  loadMyStats();
+  
+  // Avatar upload
+  document.getElementById('avatar-upload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) uploadAvatar(file);
+  });
+})();
+</script>
+</body>
+</html>
