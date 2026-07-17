@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ประเภทครุภัณฑ์ - ระบบแจ้งซ่อม</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .type-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none; color: var(--text); }
+    .type-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+    .loading-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .equipment-table-wrap { margin-top: 24px; overflow-x: auto; }
+    .equipment-table { width: 100%; border-collapse: collapse; }
+    .equipment-table th { text-align: left; padding: 10px 12px; background: var(--bg-secondary); border-bottom: 2px solid var(--border); font-weight: 600; font-size: 13px; }
+    .equipment-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    .equipment-table tr:hover { background: var(--bg-hover); }
+    .btn-sm { padding: 4px 12px; font-size: 12px; border-radius: 6px; }
+    .type-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .back-btn { cursor: pointer; color: var(--accent); font-weight: 500; }
+    .back-btn:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<button class="menu-toggle" onclick="toggleSidebar()"><span>☰</span> เมนู</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><span class="icon">🔧</span><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="sidebar-nav"></nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar">👤</div>
+      <div>
+        <div class="sidebar-user-name" id="sidebar-user-name">ผู้ใช้</div>
+        <div class="sidebar-user-role" id="sidebar-user-role">👤 ผู้ใช้งาน</div>
+      </div>
+    </div>
+    <button class="nav-btn" onclick="doLogout()" style="margin-top:8px;">🚪 ออกจากระบบ</button>
+  </div>
+</aside>
+
+<header class="topbar">
+  <div class="topbar-brand"><div class="icon">🔧</div><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="topbar-nav" id="topbar-nav"></nav>
+  <div class="topbar-right">
+    <button id="theme-toggle" class="btn btn-icon" title="สลับธีม">🌙</button>
+    <span id="topbar-role"></span>
+    <span id="topbar-uname"></span>
+  </div>
+</header>
+
+<main class="main-content">
+  <div class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <div>
+        <div class="section-title">📂 ประเภทครุภัณฑ์</div>
+        <div class="section-sub" id="page-sub">เลือกประเภทเพื่อดูรายการครุภัณฑ์และแจ้งซ่อม</div>
+      </div>
+      <span class="text-muted" id="typeCount">กำลังโหลด...</span>
+    </div>
+    <div id="loadingState" class="loading-state">⏳ กำลังโหลดข้อมูล...</div>
+    <div class="type-grid" id="type-grid"></div>
+    <div id="equipment-section" style="display:none; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
+      <div class="type-header">
+        <h3 id="equipment-type-title" style="margin:0;">รายการครุภัณฑ์</h3>
+        <span class="back-btn" onclick="closeEquipmentList()">← กลับ</span>
+      </div>
+      <div class="equipment-table-wrap">
+        <table class="equipment-table">
+          <thead><tr><th>รหัสครุภัณฑ์</th><th>ชื่อครุภัณฑ์</th><th>สถานที่</th><th>จัดการ</th></tr></thead>
+          <tbody id="equipment-list-body"><tr><td colspan="4" style="text-align:center;padding:20px;">ไม่มีข้อมูล</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../script.js"></script>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/socket-client.js"></script>
+</body>
+</html>

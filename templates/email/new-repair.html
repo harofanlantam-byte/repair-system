@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>มีคำแจ้งซ่อมใหม่</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f0f4f8;font-family:'Sarabun','Tahoma',sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f4f8;padding:30px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#ffffff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg, #e74c3c, #c0392b);padding:28px 32px;text-align:center;">
+              <h1 style="color:#ffffff;font-size:24px;margin:0;font-weight:600;">🚨 มีคำแจ้งซ่อมใหม่</h1>
+              <p style="color:rgba(255,255,255,0.85);font-size:14px;margin:8px 0 0;">กรุณาดำเนินการตรวจสอบ</p>
+            </td>
+          </tr>
+          
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px;">
+              <p style="font-size:16px;color:#333;margin:0 0 8px;">เรียน <strong>ผู้ดูแลระบบ</strong></p>
+              <p style="font-size:14px;color:#555;margin:0 0 24px;line-height:1.6;">
+                มีคำแจ้งซ่อมใหม่เข้ามาในระบบ รายละเอียดดังนี้:
+              </p>
+              
+              <!-- Ticket Card -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
+                <tr><td style="padding:16px 20px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="font-size:13px;color:#991b1b;padding:4px 0;width:120px;">เลขที่คำร้อง:</td>
+                      <td style="font-size:13px;color:#7f1d1d;font-weight:600;">{{ticket_number}}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:13px;color:#991b1b;padding:4px 0;">ผู้แจ้ง:</td>
+                      <td style="font-size:13px;color:#7f1d1d;">{{requester_name}}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:13px;color:#991b1b;padding:4px 0;">ครุภัณฑ์:</td>
+                      <td style="font-size:13px;color:#7f1d1d;">{{equipment_name}} ({{equipment_code}})</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:13px;color:#991b1b;padding:4px 0;">ประเภท:</td>
+                      <td style="font-size:13px;color:#7f1d1d;">{{type_name}}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:13px;color:#991b1b;padding:4px 0;">สถานที่:</td>
+                      <td style="font-size:13px;color:#7f1d1d;">{{location_full}}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:13px;color:#991b1b;padding:4px 0;">ความเร่งด่วน:</td>
+                      <td style="font-size:13px;color:#7f1d1d;">{{priority_text}}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:13px;color:#991b1b;padding:4px 0;">วันที่แจ้ง:</td>
+                      <td style="font-size:13px;color:#7f1d1d;">{{requested_at}}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:13px;color:#991b1b;padding:4px 0;vertical-align:top;">ปัญหา:</td>
+                      <td style="font-size:13px;color:#7f1d1d;">{{problem_description}}</td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+              
+              <!-- CTA Button -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="{{system_url}}/admin/dashboard.html" style="display:inline-block;background-color:#e74c3c;color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:6px;font-size:14px;font-weight:600;">ไปที่หน้าควบคุม</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8fafc;padding:20px 32px;text-align:center;border-top:1px solid #e2e8f0;">
+              <p style="font-size:12px;color:#94a3b8;margin:0;">
+                อีเมลนี้ส่งจากระบบอัตโนมัติ กรุณาอย่าตอบกลับ<br>
+                © {{year}} ระบบแจ้งซ่อมครุภัณฑ์
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

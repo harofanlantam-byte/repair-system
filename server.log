@@ -1,0 +1,29 @@
+◇ injected env (14) from .env // tip: ⌘ override existing { override: true }
+✅ New Features API loaded: Notifications, Manager Approval, QR Code, Ratings
+⏳ กำลังเชื่อมต่อฐานข้อมูล MySQL...
+✅ เชื่อมต่อฐานข้อมูล MySQL สำเร็จ (Pool mode)
+� [Email] กำลังสร้าง Ethereal test account...
+🕐 [Scheduler] Cron Jobs เริ่มทำงานแล้ว:
+   📊 Daily Summary: "0 8 * * *" (Asia/Bangkok)
+   ⚠️  Reminder:      "0 9 * * *" (Asia/Bangkok)
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::3000
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at C:\Users\GIGABYTE\Desktop\น้องฝึกงาน\project.3\server.js:602:12
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 3000
+}
+
+Node.js v24.16.0

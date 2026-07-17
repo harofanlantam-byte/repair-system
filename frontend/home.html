@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>หน้าแรก - ระบบแจ้งซ่อมครุภัณฑ์</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .home-hero {
+    text-align: center;
+    padding: 40px 20px;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2, #e85d26));
+    border-radius: 16px;
+    color: white;
+  }
+  .home-hero h1 {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+  .home-hero .greeting {
+    font-size: 18px;
+    opacity: 0.9;
+    margin-bottom: 4px;
+  }
+  .home-hero .role-badge {
+    display: inline-block;
+    padding: 4px 18px;
+    border-radius: 20px;
+    font-size: 14px;
+    margin-top: 12px;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(4px);
+  }
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat-card-mini {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .stat-card-mini:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  }
+  .stat-card-mini .stat-num {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+  }
+  .stat-card-mini .stat-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .quick-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .quick-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.1);
+  }
+  .quick-card .card-icon {
+    font-size: 42px;
+  }
+  .quick-card .card-title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .quick-card .card-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .section-divider {
+    margin: 24px 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-divider .line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .section-divider span {
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .admin-section {
+    display: none;
+  }
+  .admin-section.show {
+    display: block;
+  }
+  [data-theme="dark"] .home-hero {
+    background: linear-gradient(135deg, #2a1a0a, #3a2a1a);
+  }
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" onclick="toggleSidebar()"><span>☰</span> เมนู</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><span class="icon">🔧</span><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="sidebar-nav">
+    <a href="home.html" class="nav-btn active">🏠 หน้าแรก</a>
+    <a href="dashboard.html" class="nav-btn admin-only" id="nav-dashboard">📊 แดชบอร์ด</a>
+    <a href="equipment.html" class="nav-btn admin-only" id="nav-equipment">🗄️ จัดการครุภัณฑ์</a>
+    <a href="type-select.html" class="nav-btn" id="nav-type">📂 ประเภท</a>
+    <a href="repair-form.html" class="nav-btn" id="nav-repair">📝 คำแจ้งซ่อม</a>
+    <a href="history.html" class="nav-btn admin-only" id="nav-history">📋 ประวัติทั้งหมด</a>
+    <div class="sidebar-divider">👤 บัญชีของฉัน</div>
+    <a href="my-history.html" class="nav-btn" id="nav-my-history">📋 ประวัติของฉัน</a>
+    <a href="profile.html" class="nav-btn" id="nav-profile">👤 โปรไฟล์</a>
+    <a href="account-settings.html" class="nav-btn" id="nav-account">🔐 จัดการบัญชี</a>
+    <div class="sidebar-divider admin-only">⚙️ ผู้ดูแลระบบ</div>
+    <a href="user-management.html" class="nav-btn admin-only" id="nav-user-management">👥 จัดการผู้ใช้</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar">👤</div>
+      <div>
+        <div class="sidebar-user-name" id="sidebar-user-name">ผู้ใช้</div>
+        <div class="sidebar-user-role" id="sidebar-user-role">👑 Admin</div>
+      </div>
+    </div>
+    <button class="nav-btn" onclick="doLogout()" style="margin-top:8px;">🚪 ออกจากระบบ</button>
+  </div>
+</aside>
+
+<header class="topbar">
+  <div class="topbar-brand"><div class="icon">🔧</div><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="topbar-nav" id="topbar-nav">
+    <a href="home.html" class="nav-btn active">🏠 หน้าแรก</a>
+    <a href="my-history.html" class="nav-btn">📋 ประวัติของฉัน</a>
+    <a href="type-select.html" class="nav-btn">📂 ประเภท</a>
+    <a href="repair-form.html" class="nav-btn">📝 แจ้งซ่อม</a>
+  </nav>
+  <div class="topbar-right">
+    <span id="topbar-role"></span>
+    <span id="topbar-uname"></span>
+    <button class="theme-toggle" onclick="toggleDarkMode()" id="theme-toggle">🌙</button>
+    <button class="btn-logout" onclick="doLogout()">🚪ออกจากระบบ</button>
+  </div>
+</header>
+
+<main class="main-content">
+  <div class="content">
+    
+    <!-- Hero Section -->
+    <div class="home-hero" id="home-hero">
+      <div class="greeting">🙏 สวัสดี</div>
+      <h1 id="home-username">ผู้ใช้งาน</h1>
+      <div id="home-role-badge"></div>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="stats-row">
+      <div class="stat-card-mini">
+        <div class="stat-num" id="home-stat-equip">-</div>
+        <div class="stat-label">🗄️ ครุภัณฑ์ทั้งหมด</div>
+      </div>
+      <div class="stat-card-mini">
+        <div class="stat-num" id="home-stat-pending">-</div>
+        <div class="stat-label">⏳ รอดำเนินการ</div>
+      </div>
+      <div class="stat-card-mini">
+        <div class="stat-num" id="home-stat-completed">-</div>
+        <div class="stat-label">✅ ซ่อมสำเร็จ</div>
+      </div>
+      <div class="stat-card-mini">
+        <div class="stat-num" id="home-stat-my-requests">-</div>
+        <div class="stat-label">📋 คำแจ้งของฉัน</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <a href="repair-form.html" class="quick-card">
+        <div class="card-icon">📝</div>
+        <div class="card-title">แจ้งซ่อม</div>
+        <div class="card-desc">สร้างคำแจ้งซ่อมครุภัณฑ์ใหม่</div>
+      </a>
+      <a href="type-select.html" class="quick-card">
+        <div class="card-icon">📂</div>
+        <div class="card-title">ประเภทครุภัณฑ์</div>
+        <div class="card-desc">เลือกประเภทเพื่อดูครุภัณฑ์</div>
+      </a>
+      <a href="my-history.html" class="quick-card">
+        <div class="card-icon">📋</div>
+        <div class="card-title">ประวัติของฉัน</div>
+        <div class="card-desc">ดูรายการแจ้งซ่อมของตัวเอง</div>
+      </a>
+      <a href="profile.html" class="quick-card">
+        <div class="card-icon">👤</div>
+        <div class="card-title">โปรไฟล์</div>
+        <div class="card-desc">จัดการข้อมูลส่วนตัว</div>
+      </a>
+    </div>
+
+    <!-- Admin Section -->
+    <div class="admin-section" id="admin-section">
+      <div class="section-divider">
+        <div class="line"></div>
+        <span>👑 เมนูผู้ดูแลระบบ</span>
+        <div class="line"></div>
+      </div>
+      <div class="quick-actions">
+        <a href="dashboard.html" class="quick-card">
+          <div class="card-icon">📊</div>
+          <div class="card-title">แดชบอร์ด</div>
+          <div class="card-desc">ภาพรวมสถิติและกราฟ</div>
+        </a>
+        <a href="equipment.html" class="quick-card">
+          <div class="card-icon">🗄️</div>
+          <div class="card-title">จัดการครุภัณฑ์</div>
+          <div class="card-desc">เพิ่ม/แก้ไข/ลบครุภัณฑ์</div>
+        </a>
+        <a href="history.html" class="quick-card">
+          <div class="card-icon">📋</div>
+          <div class="card-title">ประวัติทั้งหมด</div>
+          <div class="card-desc">ดูคำแจ้งซ่อมทั้งหมด</div>
+        </a>
+        <a href="user-management.html" class="quick-card">
+          <div class="card-icon">👥</div>
+          <div class="card-title">จัดการผู้ใช้</div>
+          <div class="card-desc">จัดการบัญชีผู้ใช้ระบบ</div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="script.js"></script>
+<script>
+// =============================================
+// HOME PAGE - Landing Page หลัง Login
+// =============================================
+
+(function() {
+  const user = JSON.parse(localStorage.getItem('repair_user') || 'null');
+  if (!user) {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  const isAdmin = user.role === 'admin';
+
+  // 1. ซ่อนเมนู admin ใน sidebar + topbar สำหรับ user ทั่วไป
+  if (!isAdmin) {
+    document.querySelectorAll('.admin-only').forEach(el => {
+      el.style.display = 'none';
+    });
+  } else {
+    // แสดงเมนู admin
+    document.getElementById('admin-section').classList.add('show');
+  }
+
+  // 2. ข้อความต้อนรับ
+  document.getElementById('home-username').textContent = user.full_name || user.username;
+
+  // 3. Role badge
+  const roleBadge = document.getElementById('home-role-badge');
+  if (isAdmin) {
+    roleBadge.textContent = '👑 ผู้ดูแลระบบ';
+  } else if (user.role === 'manager') {
+    roleBadge.textContent = '👔 ผู้จัดการ';
+  } else {
+    roleBadge.textContent = '👤 ผู้ใช้งาน';
+  }
+
+  // 4. โหลดสถิติสรุป
+  loadHomeStats();
+})();
+
+async function loadHomeStats() {
+  const user = JSON.parse(localStorage.getItem('repair_user') || 'null');
+  if (!user) return;
+
+  const requesterName = user.full_name || user.username || '';
+
+  try {
+    // ดึงจำนวนครุภัณฑ์
+    const equipRes = await api('GET', '/api/equipment?limit=1');
+    // นับจาก server (ต้องมี count)
+    const countRes = await fetch('/api/equipment?limit=1&count=true', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(r => r.json()).catch(() => null);
+
+    // ดึงสถิติ dashboard สำหรับ Admin
+    let totalEquip = '-';
+    let pendingCount = '-';
+    let completedCount = '-';
+
+    if (isAdmin()) {
+      try {
+        const dashRes = await api('GET', '/api/dashboard/stats');
+        if (dashRes.success) {
+          totalEquip = dashRes.stats.total_equipment || '-';
+          pendingCount = dashRes.stats.pending || '0';
+          completedCount = dashRes.stats.completed || '0';
+        }
+      } catch {}
+    }
+
+    // ถ้าไม่ได้จาก dashboard ลองนับจาก equipment API
+    if (totalEquip === '-') {
+      try {
+        const eqAll = await api('GET', '/api/equipment?limit=1000');
+        if (eqAll.success) totalEquip = eqAll.data.length;
+      } catch {}
+    }
+
+    // ดึงคำแจ้งของฉัน
+    let myRequests = '-';
+    try {
+      const myRes = await api('GET', `/api/repairs?search=${encodeURIComponent(requesterName)}&limit=200`);
+      if (myRes.success) {
+        const myRecords = myRes.data.filter(r => r.requester_name === requesterName);
+        myRequests = myRecords.length;
+        // ถ้ายังไม่มี pending/completed จาก dashboard ให้นับจากข้อมูลของฉัน
+        if (pendingCount === '-' && !isAdmin()) {
+          pendingCount = myRecords.filter(r => r.status === 'pending').length;
+          completedCount = myRecords.filter(r => r.status === 'completed').length;
+        }
+      }
+    } catch {}
+
+    document.getElementById('home-stat-equip').textContent = totalEquip;
+    document.getElementById('home-stat-pending').textContent = pendingCount;
+    document.getElementById('home-stat-completed').textContent = completedCount;
+    document.getElementById('home-stat-my-requests').textContent = myRequests;
+
+  } catch (e) {
+    console.error('Error loading home stats:', e);
+  }
+}
+
+function isAdmin() {
+  const user = JSON.parse(localStorage.getItem('repair_user') || 'null');
+  return user && user.role === 'admin';
+}
+</script>
+
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/socket-client.js"></script>
+</body>
+</html>

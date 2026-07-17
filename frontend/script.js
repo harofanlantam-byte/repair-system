@@ -26,6 +26,17 @@ function escapeHtml(str) {
     return;
   }
 
+  // 🔒 Role-based page guard — ป้องกัน user เข้าหน้า admin-only โดยตรง
+  if (currentUser && currentUser.role === 'user') {
+    const adminOnlyPages = ['dashboard.html', 'user-management.html', 'history.html'];
+    const pageName = path.split('/').pop();
+    if (adminOnlyPages.includes(pageName)) {
+      const inSubdir = path.includes('/admin/') || path.includes('/user/');
+      window.location.href = inSubdir ? '../home.html' : 'home.html';
+      return;
+    }
+  }
+
   const nameEl = document.getElementById('topbar-uname');
   if (nameEl) nameEl.textContent = currentUser.full_name || currentUser.username;
 
@@ -62,56 +73,117 @@ function escapeHtml(str) {
 // =============================================
 function initSidebar() {
   const path = window.location.pathname;
-  const isAdmin = currentUser && currentUser.role === 'admin';
-  const isManagerOrAdmin = currentUser && (currentUser.role === 'admin' || currentUser.role === 'manager');
-  const inSubdir = path.includes('/admin/') || path.includes('/user/');
-  const prefix = inSubdir ? '../' : '';
+  const userRole = currentUser ? currentUser.role : 'user';
+  const isAdmin = userRole === 'admin';
+  const isManager = userRole === 'manager';
+  const isUserRole = !isAdmin && !isManager; // regular user only
+  const parts = path.split('/').filter(p => p);
+  const inSubdir = parts[0] === 'admin' || parts[0] === 'user';
+  const isInUserDir = parts[0] === 'user';
+  const isInAdminDir = parts[0] === 'admin';
 
-  function a(href, label, extraClass) {
-    const full = href.startsWith('http') || href.startsWith('/') || href.startsWith('../') ? href : (prefix + href);
-    const active = (path.includes(href.replace('../','').replace('./',''))) ? ' active' : '';
-    return `<a href="${full}" class="nav-btn${active}${extraClass ? ' ' + extraClass : ''}">${label}</a>`;
+  // 🔒 หน้า admin-only — ใช้เฉพาะ admin
+  const adminOnly = ['dashboard.html', 'history.html', 'service.html', 'user-management.html'];
+
+  // Helper: สร้างลิงค์ sidebar พร้อม active state
+  function nav(href, label, extraClass) {
+    const active = path.includes(href.replace('../','').replace('./','')) ? ' active' : '';
+    return '<a href="' + href + '" class="nav-btn' + active + (extraClass ? ' ' + extraClass : '') + '">' + label + '</a>';
   }
 
-  // Build sidebar nav
+  // 🔒 Shared pages (type-select, repair-form) — อยู่ที่ root level เท่านั้น
+  //   user ใน user/ → ../page.html
+  //   user ใน root → page.html
+  //   admin ใน admin/ → ../page.html
+  //   admin ใน root → page.html
+  function sharedLink(page) {
+    if (inSubdir) return '../' + page;
+    return page;
+  }
+
+  // 🔒 Equipment page — อยู่แยกตาม role: admin → admin/equipment.html, user → user/equipment.html
+  function equipmentLink() {
+    const page = 'equipment.html';
+    if (isUserRole) {
+      if (isInUserDir) return page;
+      else if (inSubdir) return '../user/' + page;
+      else return 'user/' + page;
+    } else {
+      if (isInAdminDir) return page;
+      else if (inSubdir) return '../admin/' + page;
+      else return 'admin/' + page;
+    }
+  }
+
+  // Helper: link สำหรับหน้า common (home, profile, my-history, account-settings) — root level
+  function commonLink(page) {
+    if (inSubdir) return '../' + page;
+    return page;
+  }
+
   const sidebarNav = document.querySelector('#sidebar .sidebar-nav');
   if (sidebarNav) {
-    sidebarNav.innerHTML = [
-      a('home.html', '🏠 หน้าแรก'),
-      isAdmin ? '<div class="sidebar-divider">📊 ผู้ดูแลระบบ</div>' : '',
-      isAdmin ? a('dashboard.html', '📊 แดชบอร์ด', 'admin-only') : '',
-      isAdmin ? a('equipment.html', '🗄️ จัดการครุภัณฑ์', 'admin-only') : '',
-      isManagerOrAdmin ? a('type-select.html', '📂 ประเภท') : a('type-select.html', '📂 ประเภท'),
-      isManagerOrAdmin ? a('repair-form.html', '📝 คำแจ้งซ่อม') : a('repair-form.html', '📝 แจ้งซ่อม'),
-      isManagerOrAdmin ? a('history.html', '📋 ประวัติทั้งหมด', 'admin-only') : '',
-      '<div class="sidebar-divider">👤 บัญชีของฉัน</div>',
-      a('my-history.html', '📋 ประวัติของฉัน'),
-      a('profile.html', '👤 โปรไฟล์'),
-      a('account-settings.html', '🔐 จัดการบัญชี'),
-      isAdmin ? '<div class="sidebar-divider admin-only">⚙️ ผู้ดูแลระบบ</div>' : '',
-      isAdmin ? a('user-management.html', '👥 จัดการผู้ใช้', 'admin-only') : ''
-    ].filter(Boolean).join('');
+    var items = [];
+
+    // 🏠 หน้าแรก
+    items.push(nav(commonLink('home.html'), '🏠 หน้าแรก'));
+
+    // Admin separator
+    if (isAdmin) {
+      items.push('<div class="sidebar-divider">📊 ผู้ดูแลระบบ</div>');
+      items.push(nav(isInAdminDir ? 'dashboard.html' : 'admin/dashboard.html', '📊 แดชบอร์ด', 'admin-only'));
+    }
+
+    // 🗄️ ครุภัณฑ์ — แยกตาม role: admin→admin/, user→user/
+    var equipLabel = isAdmin ? '🗄️ จัดการครุภัณฑ์' : '🗄️ ครุภัณฑ์';
+    items.push(nav(equipmentLink(), equipLabel));
+
+    // 📂 ประเภท — root level (shared)
+    items.push(nav(sharedLink('type-select.html'), '📂 ประเภท'));
+
+    // 📝 แจ้งซ่อม — root level (shared)
+    var repairLabel = (isAdmin || isManager) ? '📝 คำแจ้งซ่อม' : '📝 แจ้งซ่อม';
+    items.push(nav(sharedLink('repair-form.html'), repairLabel));
+
+    // 📋 ประวัติทั้งหมด (admin/manager only)
+    if (isAdmin || isManager) {
+      items.push(nav(isInAdminDir ? 'history.html' : 'admin/history.html', '📋 ประวัติทั้งหมด', 'admin-only'));
+    }
+
+    // 👤 บัญชีของฉัน
+    items.push('<div class="sidebar-divider">👤 บัญชีของฉัน</div>');
+    items.push(nav(commonLink('my-history.html'), '📋 ประวัติของฉัน'));
+    items.push(nav(commonLink('profile.html'), '👤 โปรไฟล์'));
+    items.push(nav(commonLink('account-settings.html'), '🔐 จัดการบัญชี'));
+
+    // ⚙️ ผู้ดูแลระบบ
+    if (isAdmin) {
+      items.push('<div class="sidebar-divider admin-only">⚙️ ผู้ดูแลระบบ</div>');
+      items.push(nav(isInAdminDir ? 'user-management.html' : 'admin/user-management.html', '👥 จัดการผู้ใช้', 'admin-only'));
+    }
+
+    sidebarNav.innerHTML = items.join('');
   }
 
-  // Build topbar nav
+  // Topbar nav — simple common links
   const topbarNav = document.getElementById('topbar-nav');
   if (topbarNav) {
     topbarNav.innerHTML = [
-      a('home.html', '🏠 หน้าแรก'),
-      a('my-history.html', '📋 ประวัติของฉัน'),
-      a('type-select.html', '📂 ประเภท'),
-      a('repair-form.html', '📝 แจ้งซ่อม')
+      nav(commonLink('home.html'), '🏠 หน้าแรก'),
+      nav(commonLink('my-history.html'), '📋 ประวัติของฉัน'),
+      nav(sharedLink('type-select.html'), '📂 ประเภท'),
+      nav(sharedLink('repair-form.html'), '📝 แจ้งซ่อม')
     ].join('');
   }
 
-  // User info in sidebar footer
+  // Sidebar footer user info
   const nameEl = document.getElementById('sidebar-user-name');
   const roleEl = document.getElementById('sidebar-user-role');
   if (nameEl) nameEl.textContent = currentUser.full_name || currentUser.username;
   if (roleEl) {
-    if (currentUser.role === 'admin') { roleEl.textContent = '👑 Admin'; }
-    else if (currentUser.role === 'manager') { roleEl.textContent = '👔 Manager'; }
-    else { roleEl.textContent = '👤 User'; }
+    if (isAdmin) roleEl.textContent = '👑 Admin';
+    else if (isManager) roleEl.textContent = '👔 Manager';
+    else roleEl.textContent = '👤 User';
   }
 
   // Topbar user info
@@ -119,11 +191,11 @@ function initSidebar() {
   const tRole = document.getElementById('topbar-role');
   if (tName) tName.textContent = currentUser.full_name || currentUser.username;
   if (tRole) {
-    if (currentUser.role === 'admin') {
+    if (isAdmin) {
       tRole.textContent = '👑 Admin';
       tRole.style.background = 'rgba(232,93,38,0.2)';
       tRole.style.color = '#e85d26';
-    } else if (currentUser.role === 'manager') {
+    } else if (isManager) {
       tRole.textContent = '👔 Manager';
       tRole.style.background = 'rgba(59,130,246,0.2)';
       tRole.style.color = '#3b82f6';
@@ -134,9 +206,9 @@ function initSidebar() {
     }
   }
 
-  // Hide admin-only for non-admins
+  // Hide admin-only elements for non-admins
   if (!isAdmin) {
-    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.admin-only').forEach(function(el) { el.style.display = 'none'; });
   }
 }
 
@@ -216,7 +288,6 @@ async function doRegister() {
   const errEl = document.getElementById('register-err');
   errEl.style.display = 'none';
 
-  // ตรวจสอบฝั่ง client ก่อน (UX เร็วขึ้น) — ฝั่ง server ก็ตรวจซ้ำอีกชั้นเสมอ ห้ามพึ่งฝั่งนี้อย่างเดียว
   if (!username || !password || !full_name || !email) {
     showErr(errEl, 'กรุณากรอกข้อมูลที่มีเครื่องหมาย * ให้ครบ (ชื่อผู้ใช้, รหัสผ่าน, ชื่อ-นามสกุล, อีเมล)');
     return;
@@ -228,7 +299,6 @@ async function doRegister() {
   try {
     const res = await api('POST', '/api/auth/register', { username, password, full_name, email, phone }, false);
     if (res.success) {
-      // สมัครเสร็จแล้ว login ให้เลยทันที (ตามที่ตกลงกันว่าใช้งานได้ทันทีหลังสมัคร)
       token = res.token;
       currentUser = res.user;
       localStorage.setItem('repair_token', token);
@@ -481,8 +551,9 @@ function openService(id) {
   const path = window.location.pathname;
   const isAdmin = currentUser && currentUser.role === 'admin';
   if (isAdmin) {
-    const inSubdir = path.includes('/admin/') || path.includes('/user/');
-    window.location.href = (inSubdir ? '../admin/' : 'admin/') + 'service.html?id=' + id;
+    const parts = path.split('/').filter(p => p);
+    const inSubdir = parts[0] === 'admin' || parts[0] === 'user';
+    window.location.href = (inSubdir ? '' : 'admin/') + 'service.html?id=' + id;
   } else {
     window.location.href = 'service.html?id=' + id;
   }
@@ -490,7 +561,8 @@ function openService(id) {
 
 function openRepairDoc(id) {
   localStorage.setItem('repair_document_single', JSON.stringify({ id }));
-  const inSubdir = window.location.pathname.includes('/admin/') || window.location.pathname.includes('/user/');
+  const parts = window.location.pathname.split('/').filter(p => p);
+  const inSubdir = parts[0] === 'admin' || parts[0] === 'user';
   window.location.href = (inSubdir ? '../' : '') + 'repair-document.html?id=' + id;
 }
 
@@ -585,7 +657,6 @@ function skeletonStats(count) {
 // NOTIFICATION BELL (Topbar)
 // =============================================
 function initNotificationBell() {
-  // Add notification bell to topbar
   const topbarRight = document.querySelector('.topbar-right');
   if (!topbarRight || document.getElementById('notification-bell')) return;
   
@@ -595,7 +666,6 @@ function initNotificationBell() {
   bellBtn.innerHTML = '🔔<span class="badge" id="notif-count"></span>';
   bellBtn.onclick = toggleNotificationDropdown;
   
-  // Insert before theme toggle or as first child
   const themeToggle = document.getElementById('theme-toggle');
   if (themeToggle) {
     topbarRight.insertBefore(bellBtn, themeToggle);
@@ -603,13 +673,11 @@ function initNotificationBell() {
     topbarRight.prepend(bellBtn);
   }
   
-  // Add real-time indicator
   const indicator = document.createElement('span');
   indicator.className = 'rt-indicator';
   indicator.innerHTML = '<span class="rt-dot"></span> Live';
   topbarRight.appendChild(indicator);
   
-  // Create dropdown
   const dropdown = document.createElement('div');
   dropdown.className = 'notif-dropdown';
   dropdown.id = 'notif-dropdown';
@@ -622,7 +690,6 @@ function initNotificationBell() {
   `;
   document.body.appendChild(dropdown);
   
-  // Load saved notifications from localStorage
   renderNotificationDropdown();
 }
 
@@ -634,7 +701,6 @@ function addNotification(notif) {
   notif.time = new Date().toLocaleTimeString('th-TH');
   notif.read = false;
   notificationsList.unshift(notif);
-  // Keep max 50
   if (notificationsList.length > 50) notificationsList = notificationsList.slice(0, 50);
   localStorage.setItem('repair_notifications', JSON.stringify(notificationsList));
   updateBellBadge();
@@ -655,7 +721,6 @@ function toggleNotificationDropdown() {
   const dropdown = document.getElementById('notif-dropdown');
   if (!dropdown) return;
   dropdown.classList.toggle('show');
-  // Mark all as read when opening
   if (dropdown.classList.contains('show')) {
     markAllNotificationsRead();
   }
@@ -709,14 +774,13 @@ function markNotifRead(id) {
 }
 
 // =============================================
-// SOCKET.IO Integration — ฟัง Real-Time Events
+// SOCKET.IO Integration
 // =============================================
 function initSocketIntegration() {
   if (!window.socketClient) return;
   
   const path = window.location.pathname;
   
-  // อัปเดต real-time indicator
   window.socketClient.on('connect', () => {
     const indicator = document.querySelector('.rt-indicator');
     if (indicator) indicator.classList.add('connected');
@@ -727,84 +791,67 @@ function initSocketIntegration() {
     if (indicator) indicator.classList.remove('connected');
   });
   
-  // ถ้าเชื่อมต่ออยู่แล้ว ให้อัปเดต status ทันที
   if (window.socketClient.isConnected && window.socketClient.isConnected()) {
     const indicator = document.querySelector('.rt-indicator');
     if (indicator) indicator.classList.add('connected');
   }
   
-  // เมื่อมีคำแจ้งซ่อมใหม่
   window.socketClient.on('new-notification', (data) => {
-    // แสดง toast
     showToast(data.message || data.title, data.type === 'error' ? 'error' : 'info', {
       title: data.title,
       onClick: () => {
-        // ❌ เดิม: window.location.href = `history.html?search=...` — ไฟล์นี้ไม่มีอยู่จริงในระบบ (404/หน้าขาว)
-        // ✅ ใหม่: เรียกใช้ openService() ที่มี path-resolution ถูกต้องอยู่แล้ว (รองรับทั้ง admin/user จากทุก subdir)
         if (data.data && data.data.repair_id) {
           openService(data.data.repair_id);
         }
       }
     });
     
-    // เพิ่มใน notification bell
     addNotification({
       title: data.title,
       message: data.message,
       type: data.type || 'info'
     });
     
-    // รีเฟรช dashboard ถ้าอยู่หน้า dashboard
     if (path.includes('dashboard.html') && typeof loadDashboard === 'function') {
       setTimeout(() => loadDashboard(), 500);
     }
     
-    // รีเฟรช history ถ้าอยู่หน้า history
     if ((path.includes('history.html') || path.includes('my-history.html')) && typeof loadHistory === 'function') {
       setTimeout(() => loadHistory(), 500);
     }
   });
   
-  // เมื่อมีการอัปเดตคำแจ้งซ่อม (สถานะเปลี่ยน)
   window.socketClient.on('repair-updated', (data) => {
-    // เพิ่มใน notification bell
     addNotification({
       title: data.title || 'อัปเดตสถานะ',
       message: data.message,
       type: 'warning'
     });
     
-    // รีเฟรช dashboard
     if (path.includes('dashboard.html') && typeof loadDashboard === 'function') {
       setTimeout(() => loadDashboard(), 500);
     }
     
-    // รีเฟรช history
     if ((path.includes('history.html') || path.includes('my-history.html')) && typeof loadHistory === 'function') {
       setTimeout(() => loadHistory(), 500);
     }
   });
 
-  // เมื่อซ่อมเสร็จ (completed) — พิเศษ!
   window.socketClient.on('repair-completed', (data) => {
-    // เพิ่มใน notification bell พร้อมไอคอนพิเศษ
     addNotification({
       title: '✅ ' + (data.title || 'ซ่อมสำเร็จ!'),
       message: data.message,
       type: 'success'
     });
 
-    // รีเฟรช dashboard
     if (path.includes('dashboard.html') && typeof loadDashboard === 'function') {
       setTimeout(() => loadDashboard(), 500);
     }
     
-    // รีเฟรช history
     if ((path.includes('history.html') || path.includes('my-history.html')) && typeof loadHistory === 'function') {
       setTimeout(() => loadHistory(), 500);
     }
 
-    // รีเฟรชหน้า service ถ้ากำลังดูอยู่
     if (path.includes('service.html') && typeof loadServiceData === 'function') {
       setTimeout(() => loadServiceData(), 500);
     }
@@ -812,32 +859,19 @@ function initSocketIntegration() {
 }
 
 // =============================================
-// 🛎️ Toast Notification System (เรียกจาก socket-client.js)
+// 🛎️ Toast Notification System
 // =============================================
-
-/**
- * แสดง Toast Notification — รองรับได้ทั้งแบบ duration (number) และ options (object)
- * @param {string} message — ข้อความ
- * @param {string} type — 'info' | 'success' | 'warning' | 'error'
- * @param {number|object} options — ระยะเวลา (ms) หรือ object { title, duration, onClick }
- *
- * วิธีเรียก:
- *   showToast('ข้อความ')                              // type=info, duration=4000
- *   showToast('ข้อความ', 'success')                   // duration=4000
- *   showToast('ข้อความ', 'success', 8000)             // duration=8000
- *   showToast('ข้อความ', 'info', { title:'หัวข้อ', duration:6000, onClick:fn })
- */
-function showToast(message, type = 'info', options = 4000) {
-  // ถ้า options เป็น number → แปลงเป็น { duration }
-  let opts = options;
+function showToast(message, type, options) {
+  if (type === undefined) type = 'info';
+  var opts = options;
   if (typeof options === 'number') {
     opts = { duration: options };
   }
+  if (!opts) opts = {};
 
   const duration = opts.duration || 4000;
   const title = opts.title || null;
 
-  // สร้าง toast container ถ้ายังไม่มี
   let container = document.getElementById('toast-container');
   if (!container) {
     container = document.createElement('div');
@@ -855,16 +889,14 @@ function showToast(message, type = 'info', options = 4000) {
     document.body.appendChild(container);
   }
 
-  // สีและไอคอนตาม type
   const config = {
-    info:    { bg: '#1a73e8', icon: 'ℹ️', emoji: '📢' },
-    success: { bg: '#16a34a', icon: '✅', emoji: '🎉' },
-    warning: { bg: '#d97706', icon: '⚠️', emoji: '🔧' },
-    error:   { bg: '#dc2626', icon: '❌', emoji: '🚨' }
+    info:    { bg: '#1a73e8', icon: '\u2139\ufe0f', emoji: '\ud83d\udce2' },
+    success: { bg: '#16a34a', icon: '\u2705', emoji: '\ud83c\udf89' },
+    warning: { bg: '#d97706', icon: '\u26a0\ufe0f', emoji: '\ud83d\udd27' },
+    error:   { bg: '#dc2626', icon: '\u274c', emoji: '\ud83d\udea8' }
   };
   const cfg = config[type] || config.info;
 
-  // สร้าง toast element
   const toast = document.createElement('div');
   toast.style.cssText = `
     background: ${cfg.bg};
@@ -883,18 +915,16 @@ function showToast(message, type = 'info', options = 4000) {
     transition: opacity 0.3s, transform 0.3s;
   `;
 
-  // แสดง title ถ้ามี
   const titleHtml = title ? `<strong style="display:block;margin-bottom:2px;">${title}</strong>` : '';
   toast.innerHTML = `
     <span style="font-size:18px;flex-shrink:0;">${cfg.emoji}</span>
     <span style="flex:1;">${titleHtml}${message}</span>
     <span style="font-size:12px;opacity:0.7;cursor:pointer;flex-shrink:0;padding:2px;" 
-          onclick="this.parentElement.remove()">✕</span>
+          onclick="this.parentElement.remove()">\u2715</span>
   `;
 
-  // คลิก toast เพื่อปิด หรือเรียก onClick
   toast.addEventListener('click', (e) => {
-    if (e.target.tagName === 'SPAN' && e.target.textContent === '✕') return;
+    if (e.target.tagName === 'SPAN' && e.target.textContent === '\u2715') return;
     if (opts.onClick) {
       opts.onClick();
     }
@@ -905,7 +935,6 @@ function showToast(message, type = 'info', options = 4000) {
 
   container.appendChild(toast);
 
-  // Auto remove
   setTimeout(() => {
     if (toast.parentElement) {
       toast.style.opacity = '0';
@@ -915,7 +944,6 @@ function showToast(message, type = 'info', options = 4000) {
   }, duration);
 }
 
-// เพิ่ม CSS animation สำหรับ toast
 (function addToastStyles() {
   if (document.getElementById('toast-styles')) return;
   const style = document.createElement('style');
@@ -932,10 +960,6 @@ function showToast(message, type = 'info', options = 4000) {
 // =============================================
 // 🔔 Notification Badge Management
 // =============================================
-
-/**
- * อัปเดต badge count จาก localStorage
- */
 function updateNotificationBadge() {
   const badge = document.getElementById('noti-badge-count');
   if (!badge) return;
@@ -954,17 +978,11 @@ function updateNotificationBadge() {
   }
 }
 
-/**
- * ล้าง badge count
- */
 function clearNotificationBadge() {
   localStorage.setItem('noti_unread_count', '0');
   updateNotificationBadge();
 }
 
-/**
- * เพิ่ม unread count ใน localStorage (เรียกจาก socket-client)
- */
 function incrementUnreadCount() {
   try {
     const stored = JSON.parse(localStorage.getItem('noti_unread_count') || '0');
@@ -976,7 +994,6 @@ function incrementUnreadCount() {
   }
 }
 
-// Override socket-client badge method ให้ใช้ localStorage
 (function patchBadgeIncrement() {
   const origInterval = setInterval(() => {
     if (window.socketClient && window.socketClient._incrementBadge) {
@@ -989,16 +1006,13 @@ function incrementUnreadCount() {
       console.log('✅ [Noti] Badge increment patched to use localStorage');
     }
   }, 500);
-  // Stop trying after 10s
   setTimeout(() => clearInterval(origInterval), 10000);
 })();
 
-// Initialize notification bell when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   initNotificationBell();
   updateNotificationBadge();
   
-  // Delay socket integration to allow socketClient to connect first
   setTimeout(() => {
     initSocketIntegration();
   }, 1500);
@@ -1130,8 +1144,23 @@ function renderTypeGrid() {
     return;
   }
   const icons = { 'คอมพิวเตอร์': '🖥️', 'เครื่องถ่ายเอกสาร': '🖨️', 'UPS': '🔋', 'Router': '📡' };
+  // 🔒 Role-based routing — ต้องคำนึงถึง directory ปัจจุบันด้วย
+  //   user ใน user/ → equipment.html
+  //   user ใน root → user/equipment.html
+  //   admin ใน admin/ → equipment.html
+  //   admin ใน root → admin/equipment.html
+  const userRole = currentUser ? currentUser.role : 'user';
+  const parts = window.location.pathname.split('/').filter(p => p);
+  const inSubdir = parts[0] === 'admin' || parts[0] === 'user';
+  const isAdminOrMgr = userRole === 'admin' || userRole === 'manager';
+  let equipPath;
+  if (isAdminOrMgr) {
+    equipPath = (parts[0] === 'admin') ? 'equipment.html' : 'admin/equipment.html';
+  } else {
+    equipPath = (parts[0] === 'user') ? 'equipment.html' : 'user/equipment.html';
+  }
   container.innerHTML = equipTypes.map(t => `
-    <a href="equipment.html?type_id=${t.id}" class="type-card" style="text-decoration:none;color:inherit;">
+    <a href="${equipPath}?type_id=${t.id}" class="type-card" style="text-decoration:none;color:inherit;">
       <div class="type-icon" style="font-size:48px">${icons[t.name] || '📦'}</div>
       <div class="type-name" style="font-weight:600">${t.name}</div>
       <div class="type-desc" style="font-size:13px;color:var(--text-muted)">${t.description || 'ไม่มีคำอธิบาย'}</div>

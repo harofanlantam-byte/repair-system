@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ซ่อมสำเร็จ - ระบบแจ้งซ่อมครุภัณฑ์</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f0fdf4;font-family:'Sarabun','Tahoma',sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0fdf4;padding:30px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#ffffff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg, #16a34a, #15803d);padding:28px 32px;text-align:center;">
+              <h1 style="color:#ffffff;font-size:24px;margin:0;font-weight:600;">✅ ซ่อมสำเร็จ!</h1>
+              <p style="color:rgba(255,255,255,0.85);font-size:14px;margin:8px 0 0;">ครุภัณฑ์ของคุณพร้อมรับคืนแล้ว</p>
+            </td>
+          </tr>
+          
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px;">
+              <p style="font-size:16px;color:#333;margin:0 0 8px;">เรียน <strong>{{requester_name}}</strong></p>
+              <p style="font-size:14px;color:#555;margin:0 0 24px;line-height:1.6;">
+                คำแจ้งซ่อมของคุณดำเนินการเสร็จสิ้นแล้ว กรุณาติดต่อรับคืนครุภัณฑ์ที่งานพัสดุ
+              </p>
+              
+              <!-- Success Banner -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;margin-bottom:20px;">
+                <tr><td style="padding:16px 20px;text-align:center;">
+                  <span style="font-size:32px;">🎉</span>
+                  <p style="font-size:14px;color:#166534;margin:8px 0 0;font-weight:600;">
+                    การซ่อมบำรุงเสร็จสมบูรณ์
+                  </p>
+                </td></tr>
+              </table>
+              
+              <!-- Ticket Card -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+                <tr><td style="padding:16px 20px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="font-size:13px;color:#64748b;padding:4px 0;width:100px;">เลขที่คำร้อง:</td>
+                      <td style="font-size:13px;color:#1e293b;font-weight:600;">{{ticket_number}}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:13px;color:#64748b;padding:4px 0;">ครุภัณฑ์:</td>
+                      <td style="font-size:13px;color:#1e293b;">{{equipment_name}} ({{equipment_code}})</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:13px;color:#64748b;padding:4px 0;">ผู้แจ้ง:</td>
+                      <td style="font-size:13px;color:#1e293b;">{{requester_name}}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:13px;color:#64748b;padding:4px 0;">วันที่เสร็จ:</td>
+                      <td style="font-size:13px;color:#1e293b;">{{completed_at}}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:13px;color:#64748b;padding:4px 0;">หมายเหตุ:</td>
+                      <td style="font-size:13px;color:#1e293b;">{{note}}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:13px;color:#64748b;padding:4px 0;">ค่าใช้จ่าย:</td>
+                      <td style="font-size:13px;color:#1e293b;font-weight:600;">{{repair_cost}}</td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+              
+              <!-- Call to Action -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
+                <tr>
+                  <td style="background:#fef3c7;border:1px solid #fde68a;border-radius:8px;padding:16px 20px;text-align:center;">
+                    <p style="font-size:14px;color:#92400e;margin:0 0 12px;font-weight:600;">
+                      📍 กรุณาติดต่อรับคืนครุภัณฑ์ที่ <strong>{{pickup_location}}</strong>
+                    </p>
+                    <p style="font-size:13px;color:#78350f;margin:0;">
+                      หากมีข้อสงสัย สามารถติดต่อเจ้าหน้าที่พัสดุได้ในช่วงเวลาทำการ
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="font-size:14px;color:#555;margin:24px 0 0;line-height:1.6;">
+                สามารถดูรายละเอียดเพิ่มเติมได้ที่ <a href="{{system_url}}" style="color:#1a73e8;text-decoration:none;">ระบบแจ้งซ่อม</a>
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8fafc;padding:20px 32px;text-align:center;border-top:1px solid #e2e8f0;">
+              <p style="font-size:12px;color:#94a3b8;margin:0;">
+                อีเมลนี้ส่งจากระบบอัตโนมัติ กรุณาอย่าตอบกลับ<br>
+                © {{year}} ระบบแจ้งซ่อมครุภัณฑ์
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

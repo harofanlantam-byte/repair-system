@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>สรุปรายงานคำแจ้งซ่อมประจำวัน</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f0f4f8;font-family:'Sarabun','Tahoma',sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f4f8;padding:30px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#ffffff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.08);overflow:hidden;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg, #10b981, #059669);padding:28px 32px;text-align:center;">
+              <h1 style="color:#ffffff;font-size:24px;margin:0;font-weight:600;">📊 สรุปรายงานประจำวัน</h1>
+              <p style="color:rgba(255,255,255,0.85);font-size:14px;margin:8px 0 0;">วันที่ {{report_date}}</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px;">
+              <p style="font-size:16px;color:#333;margin:0 0 8px;">เรียน <strong>ผู้ดูแลระบบ</strong></p>
+              <p style="font-size:14px;color:#555;margin:0 0 24px;line-height:1.6;">
+                สรุปภาพรวมคำแจ้งซ่อมประจำวัน {{report_date}}:
+              </p>
+
+              <!-- Summary Cards -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="48%" style="padding:4px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;">
+                      <tr><td style="padding:14px;text-align:center;">
+                        <p style="font-size:24px;font-weight:700;color:#1d4ed8;margin:0;">{{total_new}}</p>
+                        <p style="font-size:12px;color:#3b82f6;margin:4px 0 0;">คำแจ้งซ่อมใหม่</p>
+                      </td></tr>
+                    </table>
+                  </td>
+                  <td width="4%"></td>
+                  <td width="48%" style="padding:4px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
+                      <tr><td style="padding:14px;text-align:center;">
+                        <p style="font-size:24px;font-weight:700;color:#15803d;margin:0;">{{total_completed}}</p>
+                        <p style="font-size:12px;color:#22c55e;margin:4px 0 0;">ดำเนินการเสร็จสิ้น</p>
+                      </td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Status Breakdown -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;">
+                <tr><td style="padding:8px 0;">
+                  <p style="font-size:14px;color:#1e293b;font-weight:600;margin:0 0 8px;">📋 สรุปตามสถานะ</p>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+                    <tr><td style="padding:12px 16px;">
+                      {{status_rows}}
+                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:8px;border-top:1px solid #e2e8f0;">
+                        <tr>
+                          <td style="font-size:13px;color:#475569;padding:6px 0;font-weight:600;">รวมทั้งหมด</td>
+                          <td style="font-size:13px;color:#1e293b;font-weight:700;text-align:right;">{{total_all}}</td>
+                        </tr>
+                      </table>
+                    </td></tr>
+                  </table>
+                </td></tr>
+              </table>
+
+              <!-- New Tickets Table (Optional) -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;">
+                <tr><td style="padding:8px 0;">
+                  <p style="font-size:14px;color:#1e293b;font-weight:600;margin:0 0 8px;">📝 คำแจ้งซ่อมใหม่วันนี้</p>
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+                    <tr style="background:#f1f5f9;">
+                      <td style="font-size:11px;color:#64748b;padding:6px 8px;font-weight:600;">เลขที่</td>
+                      <td style="font-size:11px;color:#64748b;padding:6px 8px;font-weight:600;">ผู้แจ้ง</td>
+                      <td style="font-size:11px;color:#64748b;padding:6px 8px;font-weight:600;">ครุภัณฑ์</td>
+                      <td style="font-size:11px;color:#64748b;padding:6px 8px;font-weight:600;">สถานะ</td>
+                    </tr>
+                    {{new_ticket_rows}}
+                  </table>
+                </td></tr>
+              </table>
+
+              <!-- CTA Button -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="{{system_url}}/admin/dashboard.html" style="display:inline-block;background-color:#10b981;color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:6px;font-size:14px;font-weight:600;">ดูรายงานฉบับเต็ม</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8fafc;padding:20px 32px;text-align:center;border-top:1px solid #e2e8f0;">
+              <p style="font-size:12px;color:#94a3b8;margin:0;">
+                อีเมลนี้ส่งจากระบบอัตโนมัติ ทุกเช้า 8:00 น. กรุณาอย่าตอบกลับ<br>
+                © {{year}} ระบบแจ้งซ่อมครุภัณฑ์
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

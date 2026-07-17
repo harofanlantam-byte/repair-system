@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="th">
+<head><meta charset="UTF-8"><title>ประเภทครุภัณฑ์</title>
+<script>
+(function(){
+  var token = localStorage.getItem('repair_token');
+  var user = null;
+  try { user = JSON.parse(localStorage.getItem('repair_user') || 'null'); } catch(e){}
+  if (!token || !user) { window.location.href = 'index.html'; return; }
+  if (user.role === 'user') {
+    var path = window.location.pathname;
+    if (path.indexOf('/user/') === -1) { window.location.href = 'user/type-select.html'; }
+  } else {
+    window.location.href = 'admin/type-select.html';
+  }
+})();
+</script>
+</head>
+<body></body>
+</html>

@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ให้บริการ - ระบบแจ้งซ่อมครุภัณฑ์</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<style>
+  .btn-document {
+    background: #1a2744;
+    color: white;
+    padding: 12px 28px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: inherit;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+  }
+  .btn-document:hover {
+    background: #2a3a5a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .btn-document i {
+    font-style: normal;
+  }
+  
+  .cost-input-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .cost-input-group input {
+    flex: 1;
+  }
+  .cost-display {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #166534;
+    display: none;
+  }
+  .cost-display.show {
+    display: block;
+  }
+  [data-theme="dark"] .cost-display {
+    background: #1a2a1a;
+    border-color: #22c55e;
+    color: #86efac;
+  }
+  .btn-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+</style>
+</head>
+<body>
+<button class="menu-toggle" onclick="toggleSidebar()"><span>☰</span> เมนู</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><span class="icon">🔧</span><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-btn" id="nav-dashboard">📊 แดชบอร์ด</a>
+    <a href="equipment.html" class="nav-btn" id="nav-equipment">🗄️ จัดการครุภัณฑ์</a>
+    <a href="type-select.html" class="nav-btn" id="nav-type">📂 ประเภท</a>
+    <a href="../repair-form.html" class="nav-btn" id="nav-repair">📝 คำแจ้งซ่อม</a>
+    <a href="history.html" class="nav-btn" id="nav-history">📋 ประวัติทั้งหมด</a>
+    
+    <div class="sidebar-divider">👤 บัญชีของฉัน</div>
+    <a href="../my-history.html" class="nav-btn" id="nav-my-history">📋 ประวัติของฉัน</a>
+    <a href="../profile.html" class="nav-btn" id="nav-profile">👤 โปรไฟล์</a>
+    <a href="../account-settings.html" class="nav-btn" id="nav-account">🔐 จัดการบัญชี</a>
+    <div class="sidebar-divider admin-only">⚙️ ผู้ดูแลระบบ</div>
+    <a href="../user-management.html" class="nav-btn admin-only" id="nav-user-management">👥 จัดการผู้ใช้</a>
+</nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="sidebar-user-avatar">👤</div>
+      <div>
+        <div class="user-name" id="sidebar-user-name">ผู้ใช้</div>
+        <div class="user-role" id="sidebar-user-role">👤 ผู้ใช้งาน</div>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">🚪 ออกจากระบบ</button>
+  </div>
+</aside>
+
+<div id="main-app">
+  <nav class="topbar">
+    <div class="topbar-brand"><div class="icon">🔧</div><span>ระบบแจ้งซ่อม</span></div>
+    <div class="topbar-nav">
+      <a href="../my-history.html" class="nav-btn" id="nav-my-history">📋 ประวัติของฉัน</a>
+      <a href="../repair-form.html" class="nav-btn" id="nav-repair">📝 แจ้งซ่อม</a>
+      <a href="type-select.html" class="nav-btn" id="nav-type">📂 ประเภท</a>
+    </div>
+    <div class="topbar-user">
+      <span class="topbar-user-name" id="topbar-uname"></span>
+      <span class="topbar-user-role" id="topbar-role"></span>
+      <button class="theme-toggle" onclick="toggleDarkMode()" id="theme-toggle">🌙</button>
+      <button class="btn-logout" onclick="doLogout()">ออกจากระบบ</button>
+    </div>
+  </nav>
+  <div class="content">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div>
+        <a href="history.html" class="btn btn-outline btn-sm" style="margin-bottom:8px;display:inline-block;">← กลับ</a>
+        <div class="section-title">🛠️ ให้บริการ</div>
+        <div class="section-sub">รายละเอียดคำแจ้งซ่อม และอัพเดตสถานะ</div>
+      </div>
+      
+      <!-- ✅ ปุ่มสร้างเอกสาร (เฉพาะ Admin) - เปลี่ยนเป็นปุ่มเดียว -->
+      <div id="doc-button-container" style="display:none;">
+        <button class="btn-document" onclick="openRepairDocument()">
+          📄 สร้างเอกสารขอซ่อม
+        </button>
+      </div>
+    </div>
+    
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+      <div>
+        <div class="card" style="margin-bottom:20px;">
+          <div class="card-header"><h2>ข้อมูลคำแจ้งซ่อม</h2><span id="svc-ticket" style="font-family:'Space Mono';font-size:13px"></span></div>
+          <div class="card-body">
+            <div class="detail-grid" id="svc-detail"></div>
+            <div id="svc-img-wrap" style="margin-top:16px;display:none;"><label>รูปภาพประกอบ</label><img id="svc-img" class="detail-img"></div>
+          </div>
+        </div>
+        <div class="card"><div class="card-header"><h2>ประวัติสถานะ</h2></div><div class="card-body"><ul class="timeline" id="svc-timeline"></ul></div></div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-header"><h2>อัพเดตสถานะ</h2></div>
+          <div class="card-body form-light">
+            <div id="svc-alert" style="margin-bottom:12px;"></div>
+            
+            <div class="form-group">
+              <label>สถานะใหม่</label>
+              <select id="svc-status" style="padding: 10px; border-radius: 8px; border: 1px solid var(--border); width: 100%;">
+                <option value="pending">⏳ 1. รอดำเนินการ</option>
+                <option value="in_progress">🔄 2. ดำเนินการแล้ว</option>
+                <option value="received">📥 3. รับของแล้ว</option>
+                <option value="sent_repair">📦 4. ส่งซ่อม</option>
+                <option value="completed">✅ 5. ซ่อมสำเร็จ</option>
+                <option value="returned">📤 6. ส่งคืนแล้ว</option>
+                <option value="cancelled">❌ 7. ยกเลิก</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label>💰 เงินประมาณการซ่อม (บาท)</label>
+              <div class="cost-input-group">
+                <input type="number" id="svc-repair-cost" step="0.01" placeholder="0.00" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>📝 หมายเหตุค่าใช้จ่าย</label>
+              <input type="text" id="svc-cost-note" placeholder="เช่น ค่าอะไหล่, ค่าแรง" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:14px;">
+            </div>
+            
+            <!-- แสดงค่าใช้จ่ายที่บันทึกไว้ -->
+            <div class="cost-display" id="cost-display">
+              💰 ค่าใช้จ่าย: <span id="display-cost">0.00</span> บาท
+              <span id="display-cost-note" style="font-weight:normal;color:var(--text-muted);font-size:12px;display:block;"></span>
+            </div>
+            
+            <div class="form-group">
+              <label>📌 หมายเหตุ</label>
+              <textarea id="svc-note" rows="2" placeholder="เพิ่มหมายเหตุ..."></textarea>
+            </div>
+            
+            <button class="btn btn-accent" style="width:100%;margin-bottom:8px;" onclick="updateStatus()">💾 บันทึกสถานะ</button>
+            <button class="btn btn-success" style="width:100%;margin-bottom:8px;background:#22c55e;color:white;border:none;padding:10px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;" onclick="saveRepairCost()">💰 บันทึกค่าใช้จ่าย</button>
+            <button class="btn btn-outline" style="width:100%;" onclick="loadServiceData()">🔄 โหลดข้อมูลใหม่</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="../script.js"></script>
+<script>
+// =============================================
+// ฟังก์ชันสำหรับเอกสารขอซ่อม และบันทึกค่าใช้จ่าย
+// =============================================
+
+// (ใช้ currentRepairId และ token จาก script.js — ไม่ประกาศซ้ำ)
+
+  // ตรวจสอบว่าเป็น Admin/Saibra และแสดงปุ่ม
+  document.addEventListener('DOMContentLoaded', function() {
+    const user = JSON.parse(localStorage.getItem('repair_user') || 'null');
+    const docBtnContainer = document.getElementById('doc-button-container');
+
+    if (user && user.role === 'admin') {
+      if (docBtnContainer) docBtnContainer.style.display = 'block';
+      console.log('✅ Admin detected, showing document button');
+    } else {
+      console.log('⚠️ User is not admin, hiding document button. Role:', user?.role);
+    }
+
+  // ✅ โหลด ID จาก URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const id = urlParams.get('id');
+  if (id) {
+    currentRepairId = id;
+    window.currentRepairId = id;
+    console.log('✅ ตั้งค่า currentRepairId =', id);
+    if (typeof loadServiceData === 'function') setTimeout(() => loadServiceData(), 100);
+  } else {
+    console.warn('⚠️ ไม่พบ ID ใน URL');
+  }
+});
+
+// ✅ เปิดเอกสาร HTML (แบบเดิม) - ใช้ฟังก์ชันนี้แทนทั้งหมด
+async function openRepairDocument() {
+  const rid = currentRepairId || window.currentRepairId;
+  if (!rid) {
+    showToast('⚠️ ไม่พบข้อมูลคำแจ้งซ่อม', 'error');
+    return;
+  }
+
+  try {
+    const res = await api('GET', `/api/repairs/${rid}`);
+    if (!res.success) {
+      showToast('❌ ไม่สามารถโหลดข้อมูลได้', 'error');
+      return;
+    }
+    
+    const data = {
+      repair: res.data,
+      hospital: 'โรงพยาบาลเหนือคลอง',
+      department: 'กลุ่มงานสุขภาพดิจิทัล'
+    };
+    
+    localStorage.setItem('repair_document_single', JSON.stringify(data));
+    window.open('../repair-document.html', '_blank');
+    showToast('📄 กำลังเปิดเอกสารขอซ่อม...', 'success');
+    
+  } catch (error) {
+    console.error('Error:', error);
+    showToast('❌ เกิดข้อผิดพลาด: ' + error.message, 'error');
+  }
+}
+
+// API Helper
+async function api(method, url, data = null) {
+  const headers = { 
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+  const opts = { method, headers };
+  if (data && method !== 'GET') opts.body = JSON.stringify(data);
+  const res = await fetch(url, opts);
+  if (res.status === 401) { 
+    doLogout(); 
+    throw new Error('Unauthorized'); 
+  }
+  return res.json();
+}
+
+// บันทึกค่าใช้จ่าย
+async function saveRepairCost() {
+  const costInput = document.getElementById('svc-repair-cost');
+  const noteInput = document.getElementById('svc-cost-note');
+  const alertEl = document.getElementById('svc-alert');
+  
+  const cost = costInput.value.trim();
+  const note = noteInput.value.trim();
+  
+  if (!cost || parseFloat(cost) <= 0) {
+    alertEl.innerHTML = '<div class="alert alert-error">⚠️ กรุณากรอกค่าใช้จ่ายที่ถูกต้อง</div>';
+    costInput.focus();
+    return;
+  }
+  
+  if (!currentRepairId) {
+    alertEl.innerHTML = '<div class="alert alert-error">⚠️ ไม่พบข้อมูลคำแจ้งซ่อม</div>';
+    return;
+  }
+  
+  alertEl.innerHTML = '<div class="alert alert-info">⏳ กำลังบันทึกค่าใช้จ่าย...</div>';
+  
+  try {
+    const res = await api('PUT', `/api/repairs/${currentRepairId}/cost`, {
+      repair_cost: parseFloat(cost),
+      cost_note: note || ''
+    });
+    
+    if (res.success) {
+      alertEl.innerHTML = '<div class="alert alert-success">✅ บันทึกค่าใช้จ่ายสำเร็จ! จำนวน ' + parseFloat(cost).toLocaleString() + ' บาท</div>';
+      
+      const display = document.getElementById('cost-display');
+      display.classList.add('show');
+      document.getElementById('display-cost').textContent = parseFloat(cost).toLocaleString();
+      document.getElementById('display-cost-note').textContent = note ? 'หมายเหตุ: ' + note : '';
+      
+      setTimeout(() => {
+        loadServiceData();
+        alertEl.innerHTML = '';
+      }, 1500);
+      
+    } else {
+      alertEl.innerHTML = `<div class="alert alert-error">❌ ${res.message}</div>`;
+    }
+  } catch (error) {
+    console.error('Save cost error:', error);
+    alertEl.innerHTML = '<div class="alert alert-error">❌ เกิดข้อผิดพลาดในการบันทึก กรุณาลองอีกครั้ง</div>';
+  }
+}
+
+// โหลดข้อมูล
+async function loadServiceData() {
+  if (!currentRepairId) {
+    console.warn('⚠️ ไม่มี currentRepairId');
+    return;
+  }
+  
+  try {
+    const res = await api('GET', `/api/repairs/${currentRepairId}`);
+    if (!res.success) {
+      console.error('Failed to load data:', res.message);
+      return;
+    }
+    
+    const r = res.data;
+    
+    // แสดงหมายเลขตั๋ว
+    const svcTicket = document.getElementById('svc-ticket');
+    if(svcTicket) svcTicket.textContent = r.ticket_number;
+    
+    // ตั้งค่าสถานะ
+    const svcStatus = document.getElementById('svc-status');
+    if(svcStatus) svcStatus.value = r.status;
+    
+    // แสดงค่าใช้จ่าย
+    const costDisplay = document.getElementById('cost-display');
+    if (r.repair_cost && parseFloat(r.repair_cost) > 0) {
+      costDisplay.classList.add('show');
+      document.getElementById('display-cost').textContent = parseFloat(r.repair_cost).toLocaleString();
+      document.getElementById('display-cost-note').textContent = r.cost_note ? 'หมายเหตุ: ' + r.cost_note : '';
+      document.getElementById('svc-repair-cost').value = r.repair_cost;
+      document.getElementById('svc-cost-note').value = r.cost_note || '';
+    } else {
+      costDisplay.classList.remove('show');
+    }
+
+    // แสดงรายละเอียด
+    const details = [
+      ['ชื่อครุภัณฑ์', r.equipment_name],
+      ['รหัสครุภัณฑ์', r.equipment_code],
+      ['ประเภท', r.type_name],
+      ['ชิ้นส่วนที่ซ่อม', r.equipment_parts || '-'],
+      ['ปัญหาที่พบ', r.problem_description],
+      ['ผู้แจ้ง', r.requester_name],
+      ['สถานที่', `${r.location_building} / ${r.location_department} / ${r.location_room}`],
+      ['ความเร่งด่วน', priorityBadge(r.priority)],
+      ['วันที่แจ้ง', formatDate(r.requested_at)],
+      ['สถานะ', statusBadge(r.status)],
+      ['หมายเหตุ Admin', r.admin_note || '-'],
+    ];
+    
+    const svcDetail = document.getElementById('svc-detail');
+    if(svcDetail) {
+      svcDetail.innerHTML = details.map(([l, v]) => `<div class="detail-item"><label>${l}</label><span>${v}</span></div>`).join('');
+    }
+
+    // แสดงรูปภาพ
+    if (r.image_path) {
+      const svcImg = document.getElementById('svc-img');
+      if(svcImg) svcImg.src = r.image_path;
+      const svcImgWrap = document.getElementById('svc-img-wrap');
+      if(svcImgWrap) svcImgWrap.style.display = 'block';
+    }
+
+    // แสดงประวัติ
+    const tl = document.getElementById('svc-timeline');
+    if(tl && res.history) {
+      tl.innerHTML = res.history.map(h => `
+        <li>
+          <div class="timeline-time">${formatDate(h.changed_at)}</div>
+          <div class="timeline-text">${statusLabel(h.old_status)} → ${statusLabel(h.new_status)}</div>
+          ${h.note ? `<div class="timeline-note">📝 หมายเหตุ: ${h.note}</div>` : ''}
+          ${h.admin_name ? `<div class="timeline-note">👤 โดย: ${h.admin_name}</div>` : ''}
+        </li>
+      `).join('');
+    }
+    
+  } catch (error) {
+    console.error('Error loading service data:', error);
+    const alertEl = document.getElementById('svc-alert');
+    if(alertEl) alertEl.innerHTML = '<div class="alert alert-error">❌ ไม่สามารถโหลดข้อมูลได้</div>';
+  }
+}
+
+// Helper functions
+function statusBadge(s) {
+  const map = { 
+    pending: '⏳ รอดำเนินการ', 
+    in_progress: '🔄 ดำเนินการแล้ว', 
+    received: '📥 รับของแล้ว',
+    sent_repair: '📦 ส่งซ่อม', 
+    completed: '✅ ซ่อมสำเร็จ', 
+    returned: '📤 ส่งคืนแล้ว',
+    cancelled: '❌ ยกเลิก' 
+  };
+  return `<span class="badge ${s}">${map[s] || s}</span>`;
+}
+
+function priorityBadge(p) {
+  const map = { urgent: '🚨 เร่งด่วน', normal: '📋 ปกติ', low: '🔵 ไม่เร่งด่วน' };
+  return `<span class="badge ${p}">${map[p] || p}</span>`;
+}
+
+function statusLabel(s) {
+  const map = { 
+    pending: 'รอดำเนินการ', 
+    in_progress: 'ดำเนินการแล้ว', 
+    received: 'รับของแล้ว',
+    sent_repair: 'ส่งซ่อม', 
+    completed: 'ซ่อมสำเร็จ', 
+    returned: 'ส่งคืนแล้ว',
+    cancelled: 'ยกเลิก' 
+  };
+  return map[s] || s || '-';
+}
+
+function formatDate(d) {
+  if (!d) return '-';
+  return new Date(d).toLocaleString('th-TH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function showToast(message, type = 'success') {
+  const oldToast = document.querySelector('.toast-custom');
+  if (oldToast) oldToast.remove();
+  
+  const toast = document.createElement('div');
+  toast.className = 'toast-custom';
+  const bgColor = type === 'success' ? '#22c55e' : type === 'error' ? '#ef4444' : '#3b82f6';
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 14px 28px;
+    background: ${bgColor};
+    color: white;
+    border-radius: 10px;
+    z-index: 9999;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    animation: slideUp 0.4s ease;
+    max-width: 400px;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.4s ease';
+    setTimeout(() => toast.remove(), 400);
+  }, 3500);
+}
+
+function doLogout() {
+  localStorage.clear();
+  window.location.href = '../index.html';
+}
+
+function toggleDarkMode() {
+  const html = document.documentElement;
+  if (html.getAttribute('data-theme') === 'dark') {
+    html.setAttribute('data-theme', 'light');
+  } else {
+    html.setAttribute('data-theme', 'dark');
+  }
+}
+
+// ✅ ฟังก์ชันอัพเดตสถานะ
+async function updateStatus() {
+  const status = document.getElementById('svc-status')?.value;
+  const note = document.getElementById('svc-note')?.value;
+  const alertEl = document.getElementById('svc-alert');
+
+  if (!currentRepairId) {
+    if (alertEl) alertEl.innerHTML = '<div class="alert alert-error">❌ ไม่พบรหัสคำแจ้งซ่อม</div>';
+    return;
+  }
+  if (!status) {
+    if (alertEl) alertEl.innerHTML = '<div class="alert alert-error">❌ กรุณาเลือกสถานะ</div>';
+    return;
+  }
+
+  if (alertEl) alertEl.innerHTML = '<div class="alert alert-info">⏳ กำลังอัพเดตสถานะ...</div>';
+
+  try {
+    const res = await api('PATCH', `/api/repairs/${currentRepairId}/status`, { status, admin_note: note });
+    if (res.success) {
+      if (alertEl) alertEl.innerHTML = '<div class="alert alert-success">✅ อัพเดตสถานะสำเร็จ!</div>';
+      setTimeout(() => {
+        loadServiceData();
+        const svcNote = document.getElementById('svc-note');
+        if (svcNote) svcNote.value = '';
+        setTimeout(() => { if (alertEl) alertEl.innerHTML = ''; }, 3000);
+      }, 1000);
+    } else {
+      if (alertEl) alertEl.innerHTML = `<div class="alert alert-error">❌ ${res.message}</div>`;
+    }
+  } catch {
+    if (alertEl) alertEl.innerHTML = '<div class="alert alert-error">❌ เกิดข้อผิดพลาดในการบันทึก</div>';
+  }
+}
+</script>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/socket-client.js"></script>
+</body>
+</html>

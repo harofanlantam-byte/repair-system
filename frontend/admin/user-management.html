@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>จัดการผู้ใช้ - ระบบแจ้งซ่อมครุภัณฑ์</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<style>
+  .btn-sm { padding: 5px 14px; font-size: 13px; border-radius: 6px; cursor: pointer; border: none; font-family: inherit; }
+  .btn-edit { background: var(--accent); color: #fff; }
+  .btn-danger { background: #ef4444; color: #fff; }
+  .btn-success { background: #22c55e; color: #fff; }
+  .action-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+  
+  /* Modal Override - ensure it's on top of everything */
+  .um-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.6);
+    z-index: 9999; /* Must be higher than sidebar (1000) */
+    justify-content: center;
+    align-items: center;
+  }
+  .um-modal-overlay.show {
+    display: flex;
+  }
+  .um-modal {
+    background: var(--card);
+    border-radius: 14px;
+    width: 90%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    animation: slideDown 0.25s ease;
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .um-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .um-modal-header h2 { margin: 0; font-size: 18px; }
+  .um-modal-close {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .um-modal-close:hover { background: var(--bg-hover); color: var(--text); }
+  .um-modal-body { padding: 22px; }
+  .um-modal-footer {
+    padding: 14px 22px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  .um-form-group { margin-bottom: 16px; }
+  .um-form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  .um-form-group input,
+  .um-form-group select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    box-sizing: border-box;
+    font-family: inherit;
+    transition: border-color 0.2s;
+  }
+  .um-form-group input:focus,
+  .um-form-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(232,93,38,0.1);
+  }
+  .um-alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+  .um-alert-error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+  .um-alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .um-header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+  .um-search { max-width: 260px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); }
+  .um-search:focus { outline: none; border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" onclick="toggleSidebar()"><span>☰</span> เมนู</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><span class="icon">🔧</span><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="sidebar-nav">
+    <a href="home.html" class="nav-btn">🏠 หน้าแรก</a>
+    <a href="dashboard.html" class="nav-btn admin-only">📊 แดชบอร์ด</a>
+    <a href="equipment.html" class="nav-btn admin-only">🗄️ จัดการครุภัณฑ์</a>
+    <a href="type-select.html" class="nav-btn">📂 ประเภท</a>
+    <a href="repair-form.html" class="nav-btn">📝 คำแจ้งซ่อม</a>
+    <a href="history.html" class="nav-btn admin-only">📋 ประวัติทั้งหมด</a>
+    <div class="sidebar-divider">👤 บัญชีของฉัน</div>
+    <a href="my-history.html" class="nav-btn">📋 ประวัติของฉัน</a>
+    <a href="profile.html" class="nav-btn">👤 โปรไฟล์</a>
+    <a href="account-settings.html" class="nav-btn">🔐 จัดการบัญชี</a>
+    <div class="sidebar-divider admin-only">⚙️ ผู้ดูแลระบบ</div>
+    <a href="user-management.html" class="nav-btn active admin-only">👥 จัดการผู้ใช้</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar">👤</div>
+      <div>
+        <div class="sidebar-user-name" id="sidebar-user-name">ผู้ใช้</div>
+        <div class="sidebar-user-role" id="sidebar-user-role">👑 Admin</div>
+      </div>
+    </div>
+    <button class="nav-btn" onclick="doLogout()" style="margin-top:8px;">🚪 ออกจากระบบ</button>
+  </div>
+</aside>
+
+<header class="topbar">
+  <div class="topbar-brand"><div class="icon">🔧</div><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="topbar-nav" id="topbar-nav">
+    <a href="home.html" class="nav-btn">🏠 หน้าแรก</a>
+    <a href="my-history.html" class="nav-btn">📋 ประวัติของฉัน</a>
+    <a href="type-select.html" class="nav-btn">📂 ประเภท</a>
+    <a href="repair-form.html" class="nav-btn">📝 แจ้งซ่อม</a>
+  </nav>
+  <div class="topbar-right">
+    <span id="topbar-role"></span>
+    <span id="topbar-uname"></span>
+    <button class="theme-toggle" onclick="toggleDarkMode()" id="theme-toggle">🌙</button>
+    <button class="btn-logout" onclick="doLogout()">🚪ออกจากระบบ</button>
+  </div>
+</header>
+
+<main class="main-content">
+  <div class="content">
+    <div class="section-title">👥 จัดการผู้ใช้</div>
+    <div class="section-sub">จัดการบัญชีผู้ใช้งานระบบทั้งหมด</div>
+
+    <div class="um-header-bar">
+      <input type="text" class="um-search" id="user-search" placeholder="🔍 ค้นหาชื่อผู้ใช้..." oninput="loadUsers()">
+      <button class="btn btn-accent" id="btn-add-user">➕ เพิ่มผู้ใช้</button>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ชื่อผู้ใช้</th>
+              <th>ชื่อ-นามสกุล</th>
+              <th>บทบาท</th>
+              <th>สถานะ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="user-table-body">
+            <tr><td colspan="5" style="text-align:center;padding:32px;">⏳ กำลังโหลด...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ===== MODAL: Add/Edit User ===== -->
+<div class="um-modal-overlay" id="um-modal-overlay">
+  <div class="um-modal">
+    <div class="um-modal-header">
+      <h2 id="um-modal-title">➕ เพิ่มผู้ใช้</h2>
+      <button class="um-modal-close" id="um-modal-close-btn">✕</button>
+    </div>
+    <div class="um-modal-body">
+      <div id="um-alert"></div>
+      <input type="hidden" id="um-id">
+      <div class="um-form-group">
+        <label>👤 ชื่อผู้ใช้ <span style="color:red">*</span></label>
+        <input type="text" id="um-username" placeholder="username" autocomplete="off">
+      </div>
+      <div class="um-form-group" id="um-password-group">
+        <label>🔒 รหัสผ่าน <span style="color:red">*</span></label>
+        <input type="password" id="um-password" placeholder="อย่างน้อย 6 ตัวอักษร">
+      </div>
+      <div class="um-form-group">
+        <label>📝 ชื่อ-นามสกุล <span style="color:red">*</span></label>
+        <input type="text" id="um-fullname" placeholder="ชื่อ นามสกุล">
+      </div>
+      <div class="um-form-group">
+        <label>🛡️ บทบาท</label>
+        <select id="um-role">
+          <option value="user">👤 User — ผู้ใช้งานทั่วไป</option>
+          <option value="manager">👔 Manager — ผู้จัดการ</option>
+          <option value="admin">👑 Admin — ผู้ดูแลระบบ</option>
+        </select>
+      </div>
+    </div>
+    <div class="um-modal-footer">
+      <button class="btn btn-outline" id="um-btn-cancel">ยกเลิก</button>
+      <button class="btn btn-accent" id="um-btn-submit">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script src="../script.js"></script>
+<script>
+// =============================================
+// USER MANAGEMENT — Admin Only
+// =============================================
+(function() {
+  'use strict';
+
+  const user = JSON.parse(localStorage.getItem('repair_user') || 'null');
+
+  // Guard: Admin only
+  if (!user || user.role !== 'admin') {
+    window.location.href = 'my-history.html';
+    return;
+  }
+
+  // Hide admin-only elements for non-admin (redundant but safe)
+  if (user.role !== 'admin') {
+    document.querySelectorAll('.admin-only').forEach(function(el) {
+      el.style.display = 'none';
+    });
+  }
+
+  // ===== Modal Helpers =====
+  var modalOverlay = document.getElementById('um-modal-overlay');
+
+  function showModal() {
+    modalOverlay.classList.add('show');
+  }
+
+  function hideModal() {
+    modalOverlay.classList.remove('show');
+    document.getElementById('um-alert').innerHTML = '';
+  }
+
+  // ===== Event Listeners =====
+  document.getElementById('btn-add-user').addEventListener('click', function() {
+    openAddForm();
+  });
+
+  document.getElementById('um-modal-close-btn').addEventListener('click', hideModal);
+  document.getElementById('um-btn-cancel').addEventListener('click', hideModal);
+
+  // Close modal on overlay click (click outside modal content)
+  modalOverlay.addEventListener('click', function(e) {
+    if (e.target === modalOverlay) hideModal();
+  });
+
+  document.getElementById('um-btn-submit').addEventListener('click', submitUser);
+
+  // ===== Load Users =====
+  async function loadUsers() {
+    var tbody = document.getElementById('user-table-body');
+    if (!tbody) return;
+    var search = document.getElementById('user-search').value.trim();
+    var url = '/api/users';
+    if (search) url += '?search=' + encodeURIComponent(search);
+
+    try {
+      var res = await api('GET', url);
+      if (res.success && res.data && res.data.length) {
+        tbody.innerHTML = res.data.map(function(u) {
+          return '<tr>' +
+            '<td><strong>' + esc(u.username) + '</strong></td>' +
+            '<td>' + esc(u.full_name) + '</td>' +
+            '<td>' + roleTag(u.role) + '</td>' +
+            '<td>' + statusTag(u.status) + '</td>' +
+            '<td><div class="action-btns">' +
+              '<button class="btn-sm btn-edit" onclick="window._umEdit(' + u.id + ')">✏️ แก้ไข</button> ' +
+              '<button class="btn-sm ' + (u.status === 'active' ? 'btn-danger' : 'btn-success') + '" onclick="window._umToggle(' + u.id + ',\'' + u.status + '\')">' + (u.status === 'active' ? '🚫 ระงับ' : '✅ เปิดใช้') + '</button>' +
+            '</div></td>' +
+          '</tr>';
+        }).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;">📭 ยังไม่มีผู้ใช้ในระบบ</td></tr>';
+      }
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:red;">❌ ไม่สามารถโหลดข้อมูลได้</td></tr>';
+    }
+  }
+
+  // ===== Form: Add =====
+  function openAddForm() {
+    document.getElementById('um-id').value = '';
+    document.getElementById('um-username').value = '';
+    document.getElementById('um-password').value = '';
+    document.getElementById('um-fullname').value = '';
+    document.getElementById('um-role').value = 'user';
+    document.getElementById('um-password-group').style.display = 'block';
+    document.getElementById('um-modal-title').textContent = '➕ เพิ่มผู้ใช้ใหม่';
+    document.getElementById('um-alert').innerHTML = '';
+    showModal();
+  }
+
+  // ===== Form: Edit =====
+  window._umEdit = async function(id) {
+    try {
+      var res = await api('GET', '/api/users/' + id);
+      if (res.success && res.data) {
+        var u = res.data;
+        document.getElementById('um-id').value = u.id;
+        document.getElementById('um-username').value = u.username;
+        document.getElementById('um-password').value = '';
+        document.getElementById('um-fullname').value = u.full_name || '';
+        document.getElementById('um-role').value = u.role;
+        document.getElementById('um-password-group').style.display = 'none';
+        document.getElementById('um-modal-title').textContent = '✏️ แก้ไข: ' + u.username;
+        document.getElementById('um-alert').innerHTML = '';
+        showModal();
+      }
+    } catch(e) {
+      alert('❌ ไม่สามารถโหลดข้อมูลผู้ใช้');
+    }
+  };
+
+  // ===== Toggle Status =====
+  window._umToggle = async function(id, currentStatus) {
+    var newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    var confirmMsg = newStatus === 'inactive' ? '⚠️ ต้องการระงับบัญชีนี้ใช่หรือไม่?' : '✅ ต้องการเปิดใช้งานบัญชีนี้ใช่หรือไม่?';
+    if (!confirm(confirmMsg)) return;
+    try {
+      var res = await api('PATCH', '/api/users/' + id + '/status', { status: newStatus });
+      if (res.success) {
+        loadUsers();
+      } else {
+        alert('❌ ' + (res.message || 'ไม่สำเร็จ'));
+      }
+    } catch(e) {
+      alert('❌ เกิดข้อผิดพลาด');
+    }
+  };
+
+  // ===== Submit Form =====
+  async function submitUser() {
+    var id = document.getElementById('um-id').value;
+    var username = document.getElementById('um-username').value.trim();
+    var password = document.getElementById('um-password').value.trim();
+    var fullName = document.getElementById('um-fullname').value.trim();
+    var role = document.getElementById('um-role').value;
+    var alertEl = document.getElementById('um-alert');
+
+    if (!username || !fullName) {
+      alertEl.innerHTML = '<div class="um-alert um-alert-error">⚠️ กรุณากรอกชื่อผู้ใช้และชื่อ-นามสกุล</div>';
+      return;
+    }
+    if (!id && !password) {
+      alertEl.innerHTML = '<div class="um-alert um-alert-error">⚠️ กรุณากรอกรหัสผ่าน</div>';
+      return;
+    }
+    if (!id && password.length < 6) {
+      alertEl.innerHTML = '<div class="um-alert um-alert-error">⚠️ รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร</div>';
+      return;
+    }
+
+    var data = { username: username, full_name: fullName, role: role };
+    if (!id) data.password = password;
+
+    alertEl.innerHTML = '<div class="um-alert um-alert-success">⏳ กำลังบันทึก...</div>';
+
+    try {
+      var res;
+      if (id) {
+        res = await api('PUT', '/api/users/' + id, data);
+      } else {
+        res = await api('POST', '/api/users', data);
+      }
+      if (res.success) {
+        hideModal();
+        loadUsers();
+        alert(id ? '✅ อัพเดตข้อมูลสำเร็จ' : '✅ เพิ่มผู้ใช้สำเร็จ');
+      } else {
+        alertEl.innerHTML = '<div class="um-alert um-alert-error">❌ ' + (res.message || 'บันทึกไม่สำเร็จ') + '</div>';
+      }
+    } catch(e) {
+      alertEl.innerHTML = '<div class="um-alert um-alert-error">❌ เกิดข้อผิดพลาดในการบันทึก</div>';
+    }
+  }
+
+  // ===== Helpers =====
+  function esc(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"');
+  }
+
+  function roleTag(role) {
+    var map = { 'admin': '👑 Admin', 'manager': '👔 Manager', 'user': '👤 User' };
+    return '<span style="font-weight:500;">' + (map[role] || role) + '</span>';
+  }
+
+  function statusTag(status) {
+    return status === 'active'
+      ? '<span style="color:#16a34a;font-weight:500;">✅ ใช้งาน</span>'
+      : '<span style="color:#dc2626;font-weight:500;">❌ ระงับ</span>';
+  }
+
+  // ===== Init =====
+  document.getElementById('user-search').addEventListener('input', loadUsers);
+  loadUsers();
+})();
+</script>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/socket-client.js"></script>
+</body>
+</html>

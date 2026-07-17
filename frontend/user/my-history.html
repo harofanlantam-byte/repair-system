@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ประวัติของฉัน - ระบบแจ้งซ่อมครุภัณฑ์</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<button class="menu-toggle" onclick="toggleSidebar()"><span>☰</span> เมนู</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><span class="icon">🔧</span><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="sidebar-nav">
+    <a href="my-history.html" class="nav-btn active">📋 ประวัติของฉัน</a>
+    <a href="type-user.html" class="nav-btn">📂 ประเภท</a>
+    <a href="repair-form.html" class="nav-btn">📝 คำแจ้งซ่อม</a>
+    <div class="sidebar-divider">👤 บัญชีของฉัน</div>
+    <a href="../profile.html" class="nav-btn">👤 โปรไฟล์</a>
+    <a href="../account-settings.html" class="nav-btn">🔐 จัดการบัญชี</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar">👤</div>
+      <div>
+        <div class="sidebar-user-name" id="sidebar-user-name">ผู้ใช้</div>
+        <div class="sidebar-user-role" id="sidebar-user-role">👤 ผู้ใช้งาน</div>
+      </div>
+    </div>
+    <button class="nav-btn" onclick="doLogout()" style="margin-top:8px;">🚪 ออกจากระบบ</button>
+  </div>
+</aside>
+
+<header class="topbar">
+  <div class="topbar-brand"><div class="icon">🔧</div><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="topbar-nav" id="topbar-nav">
+    <a href="my-history.html" class="nav-btn active">📋 ประวัติของฉัน</a>
+    <a href="type-user.html" class="nav-btn">📂 ประเภท</a>
+    <a href="repair-form.html" class="nav-btn">📝 แจ้งซ่อม</a>
+  </nav>
+  <div class="topbar-right">
+    <span id="topbar-role"></span>
+    <span id="topbar-uname"></span>
+    <button class="theme-toggle" onclick="toggleDarkMode()" id="theme-toggle">🌙</button>
+    <button class="btn-logout" onclick="doLogout()">🚪ออกจากระบบ</button>
+  </div>
+</header>
+
+<main class="main-content">
+  <div class="content">
+    <div class="section-title">📋 ประวัติของฉัน</div>
+    <div class="section-sub">รายการคำแจ้งซ่อมที่ฉันเป็นผู้แจ้ง</div>
+    <div class="search-bar">
+      <input type="text" id="hist-search" placeholder="🔍 ค้นหาหมายเลข / ชื่อ..." oninput="loadMyHistory()" style="max-width:260px;">
+      <select id="hist-status" onchange="loadMyHistory()">
+        <option value="">ทุกสถานะ</option>
+        <option value="pending">รอดำเนินการ</option>
+        <option value="in_progress">ดำเนินการแล้ว</option>
+        <option value="received">รับของแล้ว</option>
+        <option value="sent_repair">ส่งซ่อม</option>
+        <option value="completed">ซ่อมสำเร็จ</option>
+        <option value="returned">ส่งคืนแล้ว</option>
+        <option value="cancelled">ยกเลิก</option>
+      </select>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>หมายเลข</th>
+              <th>ครุภัณฑ์</th>
+              <th>วันที่แจ้ง</th>
+              <th>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody id="my-history-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../script.js"></script>
+<script>
+async function loadMyHistory() {
+  const tbody = document.getElementById('my-history-table');
+  if (!tbody) return;
+  const status = document.getElementById('hist-status')?.value || '';
+  const search = document.getElementById('hist-search')?.value || '';
+  const user = JSON.parse(localStorage.getItem('repair_user') || '{}');
+  const requesterName = user.full_name || user.username || '';
+
+  let url = `/api/repairs?limit=200`;
+  if (requesterName) url += `&search=${encodeURIComponent(requesterName)}`;
+  if (status) url += `&status=${encodeURIComponent(status)}`;
+  if (search && search !== requesterName) url += `&search=${encodeURIComponent(search)}`;
+
+  try {
+    const res = await api('GET', url);
+    if (res.success && res.data.length) {
+      const myRecords = res.data.filter(r => r.requester_name === requesterName);
+      if (myRecords.length) {
+        tbody.innerHTML = myRecords.map(r => `
+          <tr onclick="window.location.href='../service.html?id=${r.id}'" style="cursor:pointer">
+            <td style="font-family:'Space Mono';font-size:12px">${r.ticket_number}</td>
+            <td><strong>${r.equipment_name}</strong></td>
+            <td>${formatDate(r.requested_at)}</td>
+            <td>${statusBadge(r.status)}</td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px">📭 ไม่มีประวัติการแจ้งซ่อม</td></tr>';
+      }
+    } else {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px">📭 ไม่มีประวัติการแจ้งซ่อม</td></tr>';
+    }
+  } catch {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:red;">❌ เกิดข้อผิดพลาด</td></tr>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const user = JSON.parse(localStorage.getItem('repair_user'));
+  if (user) {
+    document.getElementById('sidebar-user-name').textContent = user.full_name || user.username;
+    const roleEl = document.getElementById('sidebar-user-role');
+    roleEl.textContent = user.role === 'admin' ? '👑 Admin' : '👤 ผู้ใช้งาน';
+    document.getElementById('topbar-uname').textContent = user.full_name || user.username;
+  }
+  const theme = localStorage.getItem('repair_theme');
+  if (theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  loadMyHistory();
+});
+</script>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/socket-client.js"></script>
+</body>
+</html>

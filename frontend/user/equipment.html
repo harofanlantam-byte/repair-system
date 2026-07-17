@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ครุภัณฑ์ - ระบบแจ้งซ่อมครุภัณฑ์</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../style.css">
+<style>
+  .equip-header-bar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+  .equip-header-bar .left { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .equip-header-bar .left h2 { margin:0; font-size:20px; }
+  .btn-back-type { display:inline-flex; align-items:center; gap:4px; padding:6px 14px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text); cursor:pointer; font-size:14px; transition:all 0.2s; text-decoration:none; }
+  .btn-back-type:hover { border-color:var(--accent); }
+  .selected-type-badge { display:inline-block; background:var(--accent); color:#fff; padding:4px 16px; border-radius:20px; font-size:14px; font-weight:500; }
+  .no-type-warning { text-align:center; padding:60px 20px; background:var(--card); border:1px solid var(--border); border-radius:14px; }
+  .no-type-warning .icon { font-size:64px; margin-bottom:16px; }
+  .no-type-warning h3 { font-size:20px; margin-bottom:8px; }
+  .no-type-warning p { color:var(--text-muted); margin-bottom:20px; }
+  .btn-view { background:var(--info); color:#fff; border:none; padding:5px 12px; border-radius:6px; cursor:pointer; font-size:12px; }
+  .btn-repair { background:#22c55e; color:#fff; border:none; padding:5px 12px; border-radius:6px; cursor:pointer; font-size:12px; }
+  .btn-view:hover, .btn-repair:hover { opacity:0.85; }
+  .action-btns { display:flex; gap:6px; flex-wrap:wrap; }
+</style>
+</head>
+<body>
+<button class="menu-toggle" onclick="toggleSidebar()"><span>☰</span> เมนู</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><span class="icon">🔧</span><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="sidebar-nav"></nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar">👤</div>
+      <div>
+        <div class="sidebar-user-name" id="sidebar-user-name">ผู้ใช้</div>
+        <div class="sidebar-user-role" id="sidebar-user-role">👤 User</div>
+      </div>
+    </div>
+    <button class="nav-btn" onclick="doLogout()" style="margin-top:8px;">🚪 ออกจากระบบ</button>
+  </div>
+</aside>
+
+<header class="topbar">
+  <div class="topbar-brand"><div class="icon">🔧</div><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="topbar-nav" id="topbar-nav"></nav>
+  <div class="topbar-right">
+    <button id="theme-toggle" class="btn btn-icon" title="สลับธีม">🌙</button>
+    <span id="topbar-role"></span>
+    <span id="topbar-uname"></span>
+  </div>
+</header>
+
+<main class="main-content">
+  <div class="content">
+    <div class="equip-header-bar">
+      <div class="left">
+        <a href="../type-select.html" class="btn-back-type">◀ กลับไปประเภท</a>
+        <h2 class="section-title" id="equipPageTitle">🗄️ ครุภัณฑ์</h2>
+        <span class="selected-type-badge" id="selectedTypeBadge" style="display:none;">-</span>
+      </div>
+    </div>
+
+    <div class="no-type-warning" id="noTypeWarning" style="display:none;">
+      <div class="icon">📂</div>
+      <h3>เลือกประเภทครุภัณฑ์</h3>
+      <p>กรุณาเลือกประเภทครุภัณฑ์จากหน้า <strong>ประเภท</strong> เพื่อดูรายชื่อครุภัณฑ์ในประเภทนั้น</p>
+      <a href="../type-select.html" class="btn btn-accent">📂 ไปเลือกประเภท</a>
+    </div>
+
+    <div id="equipContent" style="display:none;">
+      <div class="search-bar">
+        <input type="text" id="equip-search" placeholder="🔍 ค้นหารหัส / ชื่อ..." oninput="loadEquipment()">
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>รหัสครุภัณฑ์</th>
+                <th>ชื่อครุภัณฑ์</th>
+                <th>ประเภท</th>
+                <th>ตึก/แผนก/ห้อง</th>
+                <th>สถานะ</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="equip-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../script.js"></script>
+<script>
+  let equipCurrentTypeId = null;
+  let equipCurrentTypeName = '';
+  let equipTypesCache = [];
+
+  function getTypeIdFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('type_id');
+  }
+
+  async function loadEquipTypesForPage() {
+    try {
+      const res = await api('GET', '/api/equipment-types');
+      if (res.success) equipTypesCache = res.data;
+      return equipTypesCache;
+    } catch { return []; }
+  }
+
+  async function initEquipmentPage() {
+    const typeId = getTypeIdFromUrl();
+    if (!typeId) {
+      document.getElementById('noTypeWarning').style.display = 'block';
+      document.getElementById('equipContent').style.display = 'none';
+      document.getElementById('selectedTypeBadge').style.display = 'none';
+      document.getElementById('equipPageTitle').textContent = '🗄️ ครุภัณฑ์';
+      return;
+    }
+    const types = await loadEquipTypesForPage();
+    const type = types.find(t => t.id == typeId);
+    if (!type) { alert('ไม่พบประเภทนี้'); window.location.href='../type-select.html'; return; }
+    equipCurrentTypeId = parseInt(typeId);
+    equipCurrentTypeName = type.name;
+    document.getElementById('noTypeWarning').style.display = 'none';
+    document.getElementById('equipContent').style.display = 'block';
+    const badge = document.getElementById('selectedTypeBadge');
+    badge.textContent = `📂 ${type.name}`;
+    badge.style.display = 'inline-block';
+    document.getElementById('equipPageTitle').textContent = `🗄️ ${type.name}`;
+    document.title = `ครุภัณฑ์ - ${type.name}`;
+    await loadEquipment();
+  }
+
+  async function loadEquipment() {
+    const tbody = document.getElementById('equip-table');
+    if (!tbody) return;
+    if (!equipCurrentTypeId) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">📂 กรุณาเลือกประเภทครุภัณฑ์ก่อน</td></tr>';
+      return;
+    }
+    const search = document.getElementById('equip-search')?.value || '';
+    let url = `/api/equipment?type_id=${equipCurrentTypeId}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    try {
+      const res = await api('GET', url);
+      if (res.success && res.data.length) {
+        tbody.innerHTML = res.data.map(e => {
+          // 🔍 ตรวจสอบ → ดูรายละเอียดครุภัณฑ์
+          const viewBtn = `<button class="btn-view" onclick="window.location.href='../admin/equipment-detail.html?id=${e.id}&type_id=${equipCurrentTypeId}'">🔍 ตรวจสอบ</button>`;
+          // 📝 แจ้งซ่อม → ไปหน้าแจ้งซ่อมพร้อมข้อมูลครุภัณฑ์
+          const repairBtn = `<button class="btn-repair" onclick="goToRepair(${e.id})">📝 แจ้งซ่อม</button>`;
+          return `<tr>
+            <td style="font-family:'Space Mono';font-size:12px">${e.equipment_code}</td>
+            <td><strong>${e.equipment_name}</strong></td>
+            <td>${e.type_name || equipCurrentTypeName}</td>
+            <td style="font-size:13px">${e.location_building || '-'} / ${e.location_department || '-'} / ห้อง${e.location_room || '-'}</td>
+            <td><span class="badge ${e.status === 'active' ? 'completed' : 'cancelled'}">${e.status === 'active' ? '✅ ใช้งาน' : '❌ เลิกใช้'}</span></td>
+            <td><div class="action-btns">${viewBtn}${repairBtn}</div></td>
+          </tr>`;
+        }).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px">📭 ยังไม่มีครุภัณฑ์ในประเภทนี้</td></tr>';
+      }
+    } catch { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:red;">❌ โหลดข้อมูลไม่สำเร็จ</td></tr>'; }
+  }
+
+  function goToRepair(equipId) { window.location.href = `repair-form.html?equip_id=${equipId}`; }
+
+  document.addEventListener('DOMContentLoaded', async () => { await initEquipmentPage(); });
+</script>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/socket-client.js"></script>
+</body>
+</html>

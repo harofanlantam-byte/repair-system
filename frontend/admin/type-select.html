@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ประเภทครุภัณฑ์ - ระบบแจ้งซ่อม</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .type-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none; color: var(--text); }
+    .type-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+    .loading-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+<button class="menu-toggle" onclick="toggleSidebar()"><span>☰</span> เมนู</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><span class="icon">🔧</span><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-btn">📊 แดชบอร์ด</a>
+    <a href="equipment.html" class="nav-btn">🗄️ จัดการครุภัณฑ์</a>
+    <a href="type-select.html" class="nav-btn active">📂 ประเภท</a>
+    <a href="../repair-form.html" class="nav-btn">📝 คำแจ้งซ่อม</a>
+    <a href="history.html" class="nav-btn">📋 ประวัติทั้งหมด</a>
+    <div class="sidebar-divider">👤 บัญชีของฉัน</div>
+    <a href="../profile.html" class="nav-btn">👤 โปรไฟล์</a>
+    <a href="../account-settings.html" class="nav-btn">🔐 จัดการบัญชี</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar">👤</div>
+      <div>
+        <div class="sidebar-user-name" id="sidebar-user-name">ผู้ใช้</div>
+        <div class="sidebar-user-role" id="sidebar-user-role">👑 Admin</div>
+      </div>
+    </div>
+    <button class="nav-btn" onclick="doLogout()" style="margin-top:8px;">🚪 ออกจากระบบ</button>
+  </div>
+</aside>
+
+<header class="topbar">
+  <div class="topbar-brand"><div class="icon">🔧</div><span>ระบบแจ้งซ่อม</span></div>
+  <nav class="topbar-nav" id="topbar-nav">
+    <a href="dashboard.html" class="nav-btn">📊 แดชบอร์ด</a>
+    <a href="equipment.html" class="nav-btn">🗄️ ครุภัณฑ์</a>
+    <a href="type-select.html" class="nav-btn active">📂 ประเภท</a>
+    <a href="../repair-form.html" class="nav-btn">📝 แจ้งซ่อม</a>
+    <a href="history.html" class="nav-btn">📋 ประวัติ</a>
+  </nav>
+  <div class="topbar-right">
+    <button id="theme-toggle" class="btn btn-icon" title="สลับธีม">🌙</button>
+    <span id="topbar-role"></span>
+    <span id="topbar-uname"></span>
+  </div>
+</header>
+
+<main class="main-content">
+  <div class="content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <div>
+        <div class="section-title">📂 ประเภทครุภัณฑ์</div>
+        <div class="section-sub">เลือกประเภทครุภัณฑ์เพื่อจัดการ</div>
+      </div>
+      <span class="text-muted" id="typeCount">กำลังโหลด...</span>
+    </div>
+    <div id="loadingState" class="loading-state">⏳ กำลังโหลดข้อมูล...</div>
+    <div class="type-grid" id="type-grid"></div>
+  </div>
+</main>
+
+<script src="../script.js"></script>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/socket-client.js"></script>
+</body>
+</html>
